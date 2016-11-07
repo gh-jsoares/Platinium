@@ -29,13 +29,139 @@ namespace Platinium
         }
         namespace Plugin
         {
+            /// <summary>
+            /// The IPlugin Interface.
+            /// </summary>
             public interface IPlugin
             {
-
+                void Initialize();
+                void LoadPlugin();
+                void SetInternalProperties(Dictionary<dynamic, dynamic> properties);
+                void SetProperties(Dictionary<dynamic, dynamic> properties);
+                void AddProperties(List<dynamic> properties);
+                void AddProperties(Dictionary<dynamic, dynamic> properties);
+                void RemoveProperties(List<dynamic> properties);
+                Dictionary<dynamic, dynamic> GetInternalDictionary();
+                Dictionary<dynamic, dynamic> GetDictionary();
+                IEnumerable<dynamic> GetDictionaryKeys();
+                IEnumerable<dynamic> GetDictionaryValues();
             }
-            public class PluginHelper : IPlugin
+            /// <summary>
+            /// The IPluginMetadata interface.
+            /// </summary>
+            public interface IPluginMetadata
             {
+                string Name { get; }
+                string Version { get; }
+                string Description { get; }
+            }
+            /// <summary>
+            /// The Plugin Class is derived from the IPlugin Interface. This is the base class for all the plugins developed.
+            /// All Plugins must follow this class guidelines.
+            /// </summary>
+            public abstract class Plugin : IPlugin
+            {
+                /// <summary>
+                /// The property that will store the parameter Key and Value respectively.
+                /// </summary>
+                protected abstract Dictionary<dynamic, dynamic> Properties { get; set; }
+                protected abstract Dictionary<dynamic, dynamic> InternalProperties { get; set; }
+                /// <summary>
+                /// The Plugin Constructor that sets the Properties when the Plugin is called.
+                /// </summary>
+                /// <param name="properties">The Dictionary containing the Key and Value that will be stored.</param>
+                protected Plugin(Dictionary<dynamic, dynamic> properties, Dictionary<dynamic, dynamic> internalProperties)
+                {
+                    Properties = properties;
+                    InternalProperties = internalProperties;
+                }
 
+                public virtual void SetInternalProperties(Dictionary<dynamic, dynamic> properties)
+                {
+                    foreach (var property in properties)
+                    {
+                        InternalProperties[property.Key] = property.Value;
+                    }
+                }
+                /// <summary>
+                /// Sets new values for the specified Keys.
+                /// </summary>
+                /// <param name="properties">Dictionary Key and Value.</param>
+                public virtual void SetProperties(Dictionary<dynamic, dynamic> properties)
+                {
+                    foreach (var property in properties)
+                    {
+                        Properties[property.Key] = property.Value;
+                    }
+                }
+                /// <summary>
+                /// Adds new properties with the specified keys, and value default Empty.
+                /// </summary>
+                /// <param name="properties">The List of Keys.</param>
+                public void AddProperties(List<dynamic> properties)
+                {
+                    foreach (var property in properties)
+                    {
+                        Properties.Add(property, "");
+                    }
+                }
+                /// <summary>
+                /// Adds new properties with the specified keys, and specified values.
+                /// </summary>
+                /// <param name="properties">The Dictionary containing the Key and Value that will be added.</param>
+                public void AddProperties(Dictionary<dynamic, dynamic> properties)
+                {
+                    foreach (var property in properties)
+                    {
+                        Properties.Add(property.Key, property.Value);
+                    }
+                }
+                /// <summary>
+                /// Removes a specified List of Keys from Properties.
+                /// </summary>
+                /// <param name="properties">The List of Keys that will be removed.</param>
+                public void RemoveProperties(List<dynamic> properties)
+                {
+                    foreach (var property in properties)
+                    {
+                        Properties.Remove(property);
+                    }
+                }
+
+                public abstract void Initialize();
+                /// <summary>
+                /// Loads the Plugin. Here is where the developer will place his plugin code.
+                /// </summary>
+                public abstract void LoadPlugin();
+
+                public virtual Dictionary<dynamic, dynamic> GetInternalDictionary()
+                {
+                    return InternalProperties;
+                }
+                /// <summary>
+                /// Returns the Properties with the Key and Value in a Dictionary.
+                /// </summary>
+                /// <returns>Returns a Dictionary.</returns>
+                public virtual Dictionary<dynamic, dynamic> GetDictionary()
+                {
+                    return Properties;
+                }
+                /// <summary>
+                /// Gets the Keys that Properties contains.
+                /// </summary>
+                /// <returns>Returns an IEnumerable that can be converted to any Enumerable type object.</returns>
+                public virtual IEnumerable<dynamic> GetDictionaryKeys()
+                {
+                    return Properties.Keys;
+                }
+                /// <summary>
+                /// Gets the Values that Properties contains.
+                /// </summary>
+                /// <returns>Returns an IEnumerable that can be converted to any Enumerable type object.</returns>
+                public virtual IEnumerable<dynamic> GetDictionaryValues()
+                {
+                    return Properties.Values;
+                }
             }
         }
         namespace Data
@@ -106,6 +232,15 @@ namespace Platinium
                             return (bf).Deserialize(memoryStream);
                         }
                     }
+                }
+            }
+            namespace Structures
+            {
+                [Serializable]
+                public class Info
+                {
+                    public static List<ClientInfo> ClientList { get; set; }
+                    public static List<>
                 }
             }
         }
@@ -283,11 +418,6 @@ namespace Platinium
                 {
                     return GetEnumerator();
                 }
-            }
-            [Serializable]
-            public class Info
-            {
-                public List<ClientInfo> ClientList { get; set; }
             }
         }
     }
