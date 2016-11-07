@@ -1,6 +1,4 @@
-﻿using Platinium.Shared.Connection;
-using Platinium.Shared.Data;
-using Platinium.Shared.Data.Packages;
+﻿using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Info;
 using System;
@@ -13,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Net;
+using System.Runtime.Serialization;
 
 namespace Platinium
 {
@@ -64,6 +63,7 @@ namespace Platinium
                         Message = message;
                     }
                 }
+                [Serializable]
                 public class TransportPackage
                 {
                     public byte[] Data = new byte[65536];
@@ -79,6 +79,14 @@ namespace Platinium
             }
             namespace Serialization
             {
+                public class Binder : SerializationBinder
+                {
+                    public override Type BindToType(string i_AssemblyName, string i_TypeName)
+                    {
+                        Type typeToDeserialize = Type.GetType(i_TypeName);
+                        return typeToDeserialize;
+                    }
+                }
                 public class Serializer
                 {
                     public static TransportPackage Serialize(object objToSerialize)
@@ -93,7 +101,10 @@ namespace Platinium
                     {
                         using (var memoryStream = new MemoryStream(package.Data))
                         {
-                            return (new BinaryFormatter()).Deserialize(memoryStream);
+                            BinaryFormatter bf = new BinaryFormatter();
+                            bf.Binder = new Binder();
+                            bf.Binder.BindToType("Platinium, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Platinium.Shared.Data.Packages.TransportPackage");
+                            return (bf).Deserialize(memoryStream);
                         }
                     }
                 }
@@ -150,7 +161,47 @@ namespace Platinium
             }
             public class Server
             {
-
+                private TcpClient clientSocket = default(TcpClient);
+                private TcpListener MainServerSocket;
+                private TcpListener HearthBeatServerSocket;
+                public IPEndPoint MainIPEndPoint { get; private set; }
+                public IPEndPoint HearthBeatIPEndPoint { get; private set; }
+                public Server()
+                {
+                    MainIPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
+                    HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
+                    Task hearthBeatTask = new Task(HearthBeat);
+                    hearthBeatTask.Start();
+                    Listen();
+                }
+                private void Listen()
+                {
+                    MainServerSocket = new TcpListener(MainIPEndPoint);
+                    MainServerSocket.Start();
+                    while (true)
+                    {
+                        WelcomePackage data;
+                        clientSocket = MainServerSocket.AcceptTcpClient();
+                        TransportPackage package = new TransportPackage();
+                        NetworkStream networkStream = clientSocket.GetStream();
+                        networkStream.Read(package.Data, 0, clientSocket.ReceiveBufferSize);
+                        data = (WelcomePackage)Serializer.Deserialize(package);
+                        foreach (var item in data.Info)
+                        {
+                            Console.WriteLine(item);
+                        }
+                    }
+                }
+                private void HearthBeat()
+                {
+                    HearthBeatServerSocket = new TcpListener(HearthBeatIPEndPoint);
+                    HearthBeatServerSocket.Start();
+                    while (true)
+                    {
+                        TcpClient hearthBeatClient = HearthBeatServerSocket.AcceptTcpClient();
+                        hearthBeatClient.Close();
+                    }
+                }
             }
         }
         namespace Info

