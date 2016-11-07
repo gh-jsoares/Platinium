@@ -103,7 +103,6 @@ namespace Platinium
                         {
                             BinaryFormatter bf = new BinaryFormatter();
                             bf.Binder = new Binder();
-                            bf.Binder.BindToType("Platinium, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "Platinium.Shared.Data.Packages.TransportPackage");
                             return (bf).Deserialize(memoryStream);
                         }
                     }
