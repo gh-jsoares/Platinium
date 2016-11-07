@@ -284,6 +284,11 @@ namespace Platinium
                     return GetEnumerator();
                 }
             }
+            [Serializable]
+            public class Info
+            {
+                public List<ClientInfo> ClientList { get; set; }
+            }
         }
     }
 }
