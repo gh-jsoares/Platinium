@@ -1,34 +1,29 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace PlatiniumServer
+namespace PlatiniumMasterWPF
 {
-    class ServerController
+    class MasterController
     {
         private static string DLL_URL = "http://repositorio123.esy.es/Platinium.css";
         private byte[] raw_assembly;
         private Assembly assembly;
         private Type type;
-        public ServerController()
+        public MasterController()
         {
             InitializeEnvironment();
             Initialize();
         }
         private void Initialize()
         {
-            type = assembly.GetType("Platinium.Entities.Server");
+            type = assembly.GetType("Platinium.Entities.Master");
             object server = Activator.CreateInstance(type);
-            MethodInfo method = type.GetMethod("Test");
-            object res = method.Invoke(server, null);
         }
         private void InitializeEnvironment()
         {

@@ -10,7 +10,7 @@ namespace PlatiniumServer
     {
         static void Main(string[] args)
         {
-            Server server = new Server();
+            ServerController server = new ServerController();
             Console.ReadLine();
         }
     }

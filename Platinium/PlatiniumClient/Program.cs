@@ -11,8 +11,8 @@ namespace PlatiniumClient
     {
         static void Main(string[] args)
         {
-            Thread.Sleep(10000);
-            Client client = new Client();
+            Thread.Sleep(5000);
+            ClientController client = new ClientController();
             Console.ReadLine();
         }
     }

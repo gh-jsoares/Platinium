@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatiniumClient", "Platiniu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatiniumMaster", "PlatiniumMaster\PlatiniumMaster.csproj", "{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatiniumMasterWPF", "PlatiniumMasterWPF\PlatiniumMasterWPF.csproj", "{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
