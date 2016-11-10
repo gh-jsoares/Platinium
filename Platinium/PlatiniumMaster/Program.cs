@@ -13,7 +13,6 @@ namespace PlatiniumMaster
         {
             Thread.Sleep(5000);
             MasterController client = new MasterController();
-            Console.ReadLine();
         }
     }
 }

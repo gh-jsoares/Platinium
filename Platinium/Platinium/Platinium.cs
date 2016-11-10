@@ -18,7 +18,7 @@ using Platinium.Shared.Data.Structures;
 using Platinium.Shared.Connection;
 using System.Threading;
 using Platinium.Shared.Communication;
-using Platinium.Shared.Commands;
+using Platinium.Shared.Content;
 
 namespace Platinium
 {
@@ -44,22 +44,6 @@ namespace Platinium
                          .ToDictionary(prop => prop.Name, prop => prop.GetValue(objectToConvert, null)));
                     }
                     return tempList;
-                }
-            }
-        }
-        namespace Commands
-        {
-            public interface ICommands
-            {
-
-            }
-            [Serializable]
-            public class Command : ICommands
-            {
-                public string Text { get; set; }
-                public Command(string text)
-                {
-                    Text = text;
                 }
             }
         }
@@ -104,6 +88,30 @@ namespace Platinium
                         }
                     }
                 }
+            }
+        }
+        namespace Content
+        {
+            public interface IContent
+            {
+                object Data { get; set; }
+                Type DataType { get; set; }
+            }
+            [Serializable]
+            public class Command : IContent
+            {
+                public object Data { get; set; }
+                public Type DataType { get; set; }
+                public Command()
+                {
+
+                }
+                public Command(object data, Type datatype)
+                {
+                    Data = data;
+                    DataType = datatype;
+                }
+
             }
         }
         namespace Connection
@@ -286,27 +294,30 @@ namespace Platinium
         {
             namespace Packages
             {
+                public class PackageFactory
+                {
+
+                }
                 [Serializable]
                 public class Package
                 {
-                    public BaseInfo To { get; set; }
-                    public BaseInfo From { get; set; }
-                    public object Object { get; set; }
+                    public BaseInfo To { get; private set; }
+                    public BaseInfo From { get; private set; }
+                    public object Content { get; private set; }
+                    public Type ContentType { get; private set; }
                     public Package(object obj, BaseInfo to, BaseInfo from)
                     {
                         To = to;
                         From = from;
-                        Object = obj;
+                        Content = obj;
+                        ContentType = obj.GetType();
                     }
                     public Package(object obj, BaseInfo from)
                     {
                         From = from;
-                        Object = obj;
+                        Content = obj;
+                        ContentType = obj.GetType();
                     }
-                }
-                public class PackageFactory
-                {
-
                 }
                 [Serializable]
                 public class TransportPackage
@@ -424,35 +435,6 @@ namespace Platinium
     {
         public class Client
         {
-            #region test
-            //private TcpClient ClientSocket { get; set; }
-            //private ClientInfo ClientInfo { get; set; }
-            //public Client(TcpClient clientSocket, ClientInfo clientInfo)
-            //{
-            //    ClientSocket = clientSocket;
-            //    ClientInfo = clientInfo;
-            //}
-            //private void Handle()
-            //{
-            //    while (true)
-            //    {
-            //        BroadcastPackage data;
-            //        TransportPackage package = new TransportPackage();
-            //        NetworkStream networkStream = null;
-            //        try
-            //        {
-            //            networkStream = ClientSocket.GetStream();
-            //            networkStream.Read(package.Data, 0, ClientSocket.ReceiveBufferSize);
-            //            data = (BroadcastPackage)Serializer.Deserialize(package);
-
-            //        }
-            //        catch (Exception)
-            //        {
-
-            //        }
-            //    }
-            //}
-            #endregion
             private BaseInfo ClientInfo = BuildClientInfo();
             private TcpClient clientSocket = new TcpClient();
             private NetworkStream serverStream = default(NetworkStream);
@@ -483,8 +465,8 @@ namespace Platinium
                     serverStream.Read(TransportPackage.Data, 0, clientSocket.ReceiveBufferSize);
                     serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    Command command = (Command)package.Object;
-                    Console.WriteLine(command.Text);
+                    Command command = (Command)package.Content;
+                    Console.WriteLine(command.Data);
                     Write(package.From, ClientInfo);
                 }
             }
@@ -525,7 +507,7 @@ namespace Platinium
                 {
                     string command = Console.ReadLine();
                     string to = Console.ReadLine();
-                    Package package = new Package(new Command(command), new BaseInfo(to), MasterInfo);
+                    Package package = new Package(new Command(command, command.GetType()), new BaseInfo(to), MasterInfo);
                     TransportPackage TransportPackage = Serializer.Serialize(package);
                     serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     serverStream.Flush();
@@ -540,7 +522,7 @@ namespace Platinium
                     serverStream.Read(TransportPackage.Data, 0, masterSocket.ReceiveBufferSize);
                     serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    Console.WriteLine(package.Object.ToString());
+                    Console.WriteLine(package.Content.ToString());
                 }
             }
             private static BaseInfo BuildMasterInfo()
@@ -572,10 +554,6 @@ namespace Platinium
                 hearthBeatTask.Start();
                 masterListenTask.Start();
                 clientListenTask.Start();
-                while (true)
-                {
-
-                }
             }
             private void MasterListen()
             {
@@ -588,7 +566,7 @@ namespace Platinium
                     NetworkStream networkStream = masterSocket.GetStream();
                     networkStream.Read(TransportPackage.Data, 0, masterSocket.ReceiveBufferSize);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    BaseInfo Info = (BaseInfo)package.Object;
+                    BaseInfo Info = (BaseInfo)package.Content;
                     Info.Connector = new Connector(masterSocket);
                     DataStructure.MasterList.Add(Info);
                     Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
@@ -611,7 +589,7 @@ namespace Platinium
                     NetworkStream networkStream = clientSocket.GetStream();
                     networkStream.Read(TransportPackage.Data, 0, clientSocket.ReceiveBufferSize);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    BaseInfo Info = (BaseInfo)package.Object;
+                    BaseInfo Info = (BaseInfo)package.Content;
                     Info.Connector = new Connector(clientSocket);
                     DataStructure.ClientList.Add(Info);
                     Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
