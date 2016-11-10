@@ -30,7 +30,7 @@ namespace PlatiniumClient
         }
         private void Initialize()
         {
-            type = assembly.GetType("Platinium.Entities.Client");
+            type = assembly.GetType("Platinium.Entities.PlatiniumClient");
             object client = Activator.CreateInstance(type);
         }
         private void InitializeEnvironment()

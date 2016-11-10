@@ -12,7 +12,7 @@ namespace PlatiniumMaster
         static void Main(string[] args)
         {
             Thread.Sleep(5000);
-            MasterController client = new MasterController();
+            MasterController master = new MasterController();
         }
     }
 }
