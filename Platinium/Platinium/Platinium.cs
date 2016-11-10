@@ -463,7 +463,6 @@ namespace Platinium
                     serverStream = clientSocket.GetStream();
                     TransportPackage TransportPackage = new TransportPackage();
                     serverStream.Read(TransportPackage.Data, 0, clientSocket.ReceiveBufferSize);
-                    serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     Command command = (Command)package.Content;
                     Console.WriteLine(command.Data);
@@ -520,7 +519,6 @@ namespace Platinium
                     serverStream = masterSocket.GetStream();
                     TransportPackage TransportPackage = new TransportPackage();
                     serverStream.Read(TransportPackage.Data, 0, masterSocket.ReceiveBufferSize);
-                    serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     Console.WriteLine(package.Content.ToString());
                 }
