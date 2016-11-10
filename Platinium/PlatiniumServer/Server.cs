@@ -27,8 +27,8 @@ namespace PlatiniumServer
         {
             type = assembly.GetType("Platinium.Entities.Server");
             object server = Activator.CreateInstance(type);
-            MethodInfo method = type.GetMethod("Test");
-            object res = method.Invoke(server, null);
+            //MethodInfo method = type.GetMethod("Test");
+            //object res = method.Invoke(server, null);
         }
         private void InitializeEnvironment()
         {
