@@ -53,6 +53,7 @@ namespace Platinium
             {
 
             }
+            [Serializable]
             public class Command : ICommands
             {
                 public string Text { get; set; }
@@ -463,6 +464,8 @@ namespace Platinium
                 TransportPackage TransportPackage = Serializer.Serialize(package);
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
+                Thread GetThread = new Thread(Get);
+                GetThread.Start();
             }
             private void Write(BaseInfo to, BaseInfo from)
             {
@@ -522,7 +525,7 @@ namespace Platinium
                 {
                     string command = Console.ReadLine();
                     string to = Console.ReadLine();
-                    Package package = new Package(command, new BaseInfo(to), MasterInfo);
+                    Package package = new Package(new Command(command), new BaseInfo(to), MasterInfo);
                     TransportPackage TransportPackage = Serializer.Serialize(package);
                     serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     serverStream.Flush();
