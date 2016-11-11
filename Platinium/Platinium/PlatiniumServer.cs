@@ -8,9 +8,11 @@ using Platinium.Shared.Info;
 using Platinium.Shared.Plugin;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -102,10 +104,9 @@ namespace Platinium
         {
             public IPEndPoint IPEndPoint { get; private set; }
             public IPEndPoint HearthBeatIPEndPoint { get; private set; }
-            private PluginHelper PluginHelperControl { get; set; }
             public PlatiniumServer()
             {
-                PluginHelperControl = new PluginHelper("Plugins", "*.dll", true);
+                LoadPlugins();
                 IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
                 HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
                 Thread hearthBeatTask = new Thread(HearthBeat);
@@ -159,12 +160,22 @@ namespace Platinium
 
                         break;
                     case CommandType.PluginTransfer:
-                        returnPackage = new Package(new BaseCommand(PluginHelperControl, PluginHelperControl.GetType(), CommandType.PluginTransfer), inPackage.From, new BaseInfo(BaseInfoType.Server));
+
                         break;
                     default:
                         break;
                 }
                 return returnPackage;
+            }
+            private void LoadPlugins()
+            {
+                string[] dllFiles = Directory.GetFiles("Plugins", "*.dll", SearchOption.AllDirectories);
+                foreach (string file in dllFiles)
+                {
+                    Assembly assemb = Assembly.LoadFrom(file);
+
+                    DataStructure.AssemblyList.Add(assemb);
+                }
             }
             private void HearthBeat()
             {

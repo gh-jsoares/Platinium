@@ -100,6 +100,10 @@ namespace Platinium
                 IEnumerable<dynamic> GetDictionaryKeys();
                 IEnumerable<dynamic> GetDictionaryValues();
             }
+            public interface IPluginServerSide
+            {
+
+            }
             /// <summary>
             /// The IPluginMetadata interface.
             /// </summary>
@@ -250,146 +254,6 @@ namespace Platinium
                     return Properties.Values;
                 }
             }
-            public class PluginHelper
-            {
-                /// <summary>
-                /// The object data containing the object Plugin and the interface IPluginMetadata.
-                /// </summary>
-                [ImportMany(typeof(PluginClass), AllowRecomposition = true)]
-                public IEnumerable<Lazy<KeyValuePair<PluginClass, List<MethodInfo>>, IPluginMetadata>> data { get; set; }
-                //IEnumerable<Lazy<IEnumerable<Plugin
-                /// <summary>
-                /// The Plugin object.
-                /// </summary>
-                public PluginClass Plugin { get; private set; }
-                /// <summary>
-                /// The Plugin object metadata.
-                /// </summary>
-                public IPluginMetadata PluginMetadata { get; private set; }
-                /// <summary>
-                /// Plugins folder.
-                /// </summary>
-                public string Folder { get; set; }
-                /// <summary>
-                /// Extensions that will be loaded.
-                /// </summary>
-                public string Extension { get; set; }
-                /// <summary>
-                /// Sets if the class shall output values in the console. Should be false if it's not a Console project. Default is false.
-                /// </summary>
-                public bool OutputConsole { get; set; } = false;
-                /// <summary>
-                /// Default constructor.
-                /// </summary>
-                public PluginHelper()
-                {
-                    OutputConsole = false;
-                }
-                /// <summary>
-                /// PluginHelper constructor. This will initialize and load the plugins.
-                /// </summary>
-                /// <param name="folder">Plugins folder.</param>
-                /// <param name="extension">Extensions that will be loaded.</param>
-                /// <param name="outputConsole">(Optional) Sets if the class shall output values in the console. Should be false if it's not a Console project. Default is false.</param>
-                public PluginHelper(string folder, string extension, bool outputConsole = false)
-                {
-                    Folder = folder;
-                    Extension = extension;
-                    OutputConsole = outputConsole;
-                    this.Initialize();
-                }
-                /// <summary>
-                /// Initializes.
-                /// </summary>
-                void Initialize()
-                {
-                    LoadPlugins();
-                }
-                /// <summary>
-                /// Loads the plugins.
-                /// </summary>
-                public List<IDictionary<string, object>> LoadPlugins()
-                {
-                    try
-                    {
-                        List<IDictionary<string, object>> list = new List<IDictionary<string, object>>();
-                        DirectoryCatalog catalog = new DirectoryCatalog(Folder, Extension);
-                        if (catalog.LoadedFiles.Count != 0)
-                        {
-                            if (OutputConsole)
-                            {
-                                Console.WriteLine("*** {0} PLUGINS FOUND! ***", catalog.LoadedFiles.Count);
-                            }
-                            foreach (var plugin in catalog)
-                            {
-                                var exportDefinitions = plugin.ExportDefinitions.ToArray();
-                                IDictionary<string, object> metadata = exportDefinitions[0].Metadata;
-                                list.Add(metadata);
-                                if (OutputConsole)
-                                {
-                                    Console.WriteLine("\nName: {0}\nVersion: {1}\nDescription: {2}", metadata["Name"], metadata["Version"], metadata["Description"]);
-                                }
-                            }
-                            Compose(catalog);
-                            return list;
-                        }
-                        else
-                        {
-                            if (OutputConsole)
-                            {
-                                Console.WriteLine("*** NO PLUGINS FOUND! ***");
-                            }
-                            return list;
-                        }
-                    }
-                    catch (ArgumentNullException ex)
-                    {
-                        throw;
-                    }
-                }
-                /// <summary>
-                /// Composes the CompositionContainer from the specified catalog.
-                /// </summary>
-                /// <param name="catalog">The catalog that will be composed</param>
-                private void Compose(DirectoryCatalog catalog)
-                {
-                    AggregateCatalog agg = new AggregateCatalog();
-                    agg.Catalogs.Add(catalog);
-                    CompositionContainer container = new CompositionContainer(agg);
-                    container.ComposeParts(this);
-                }
-                /// <summary>
-                /// Selects which plugin will be used, by specifying the IPluginMetadata property Name that is set in the plugin.
-                /// </summary>
-                /// <param name="name">The plugin name.</param>
-                public void SelectPlugin(string name)
-                {
-                    Plugin = GetPluginInfo(name).Key;
-                    PluginMetadata = GetPluginMetadata(name);
-                }
-                /// <summary>
-                /// Finds the plugin that matches the IPluginMetaData property Name, and sets the Plugin object.
-                /// </summary>
-                /// <param name="name">The Plugin name.</param>
-                /// <returns>Returns the Plugin object.</returns>
-                private KeyValuePair<PluginClass, List<MethodInfo>> GetPluginInfo(string name)
-                {
-                    return data.Where(l => l.Metadata.Name.Equals(name)).Select(l => l.Value).FirstOrDefault();
-                }
-                private KeyValuePair<PluginClass, List<MethodInfo>> GetPlugin(string name)
-                {
-                    return data.Where(l => l.Metadata.Name.Equals(name)).Select(l => l.Value).FirstOrDefault();
-                }
-                /// <summary>
-                /// Finds the plugin metadata that matches the IPluginMetadata property Name, and sets the IPluginMetadata object.
-                /// </summary>
-                /// <param name="name">The Plugin name.</param>
-                /// <returns>Returns the IPluginMetadata object</returns>
-                private IPluginMetadata GetPluginMetadata(string name)
-                {
-                    return data.Where(l => l.Metadata.Name.Equals(name)).Select(l => l.Metadata).FirstOrDefault();
-                }
-            }
         }
         namespace Data
         {
@@ -473,6 +337,7 @@ namespace Platinium
                     public static List<BaseInfo> MasterList = new List<BaseInfo>();
                     public static List<BaseInfo> ClientList = new List<BaseInfo>();
                     public static Dictionary<IPluginMetadata, Plugin.PluginClass> PluginDictionary = new Dictionary<IPluginMetadata, Plugin.PluginClass>();
+                    public static List<Assembly> AssemblyList = new List<Assembly>();
                 }
             }
         }
