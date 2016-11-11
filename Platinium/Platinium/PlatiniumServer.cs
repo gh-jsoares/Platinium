@@ -1,4 +1,4 @@
-﻿using Platinium.Shared.Connection;
+﻿using Platinium.Connection;
 using Platinium.Shared.Core;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
@@ -15,77 +15,119 @@ using System.Threading.Tasks;
 
 namespace Platinium
 {
+    namespace Connection
+    {
+        [Serializable]
+        public class Connector
+        {
+            public TcpClient ClientSocket { get; private set; }
+            private static NetworkStream networkStream = default(NetworkStream);
+            public void StartConnection(TcpClient inClientSocket)
+            {
+                this.ClientSocket = inClientSocket;
+                Thread handleThread = new Thread(handleConnection);
+                handleThread.Name = "HANDLETHREAD";
+                handleThread.Start();
+            }
+            private void handleConnection()
+            {
+                while (true)
+                {
+                    networkStream = null;
+                    networkStream = ClientSocket.GetStream();
+                    TransportPackage TransportPackage = new TransportPackage();
+                    networkStream.Read(TransportPackage.Data, 0, ClientSocket.ReceiveBufferSize);
+                    networkStream.Flush();
+                    Package package = (Package)Serializer.Deserialize(TransportPackage);
+                    Console.WriteLine("GET PACKAGE\nType - {0}\nValue - {1}\nFrom - {2}\nTo - {3}", package.ContentType.ToString(), package.Content.ToString(), package.From.UID, package.To.UID);
+                    Communicate(package);
+                }
+            }
+            private static void Communicate(Package package)
+            {
+                Console.WriteLine("COMMUNICATE");
+                Console.WriteLine("TO {0}", package.To.Type);
+                if (package.To.Type == BaseInfoType.Client)
+                {
+                    foreach (var item in DataStructure.ClientList)
+                    {
+                        if (package.To.UID == item.UID)
+                        {
+                            TcpClient communicationSocket = item.Connector.ClientSocket;
+                            NetworkStream communicationStream = communicationSocket.GetStream();
+                            TransportPackage TransportPackage = Serializer.Serialize(package);
+                            communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                            communicationStream.Flush();
+                            Console.WriteLine("SENT");
+                        }
+                    }
+                }
+                else if (package.To.Type == BaseInfoType.Master)
+                {
+                    foreach (var item in DataStructure.MasterList)
+                    {
+                        if (package.To.UID == item.UID)
+                        {
+                            TcpClient communicationSocket = item.Connector.ClientSocket;
+                            NetworkStream communicationStream = communicationSocket.GetStream();
+                            TransportPackage TransportPackage = Serializer.Serialize(package);
+                            communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                            communicationStream.Flush();
+                            Console.WriteLine("SENT");
+                        }
+                    }
+                }
+            }
+        }
+    }
     namespace Entities
     {
         public class PlatiniumServer
         {
-            public IPEndPoint ClientIPEndPoint { get; private set; }
-            public IPEndPoint MasterIPEndPoint { get; private set; }
+            public IPEndPoint IPEndPoint { get; private set; }
             public IPEndPoint HearthBeatIPEndPoint { get; private set; }
             public PlatiniumServer()
             {
-                ClientIPEndPoint = new IPEndPoint(IPAddress.Any, 55556);
-                MasterIPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
+                IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
                 HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
                 Thread hearthBeatTask = new Thread(HearthBeat);
-                Thread masterListenTask = new Thread(MasterListen);
-                Thread clientListenTask = new Thread(ClientListen);
-                hearthBeatTask.Start();
-                masterListenTask.Start();
-                clientListenTask.Start();
+                Listen();
             }
-            private void MasterListen()
+            private void Listen()
             {
-                TcpListener MasterServerSocket = new TcpListener(MasterIPEndPoint);
-                MasterServerSocket.Start();
+                TcpListener ServerSocket = new TcpListener(IPEndPoint);
+                ServerSocket.Start();
                 while (true)
                 {
-                    TcpClient masterSocket = MasterServerSocket.AcceptTcpClient();
+                    TcpClient Socket = ServerSocket.AcceptTcpClient();
                     TransportPackage TransportPackage = new TransportPackage();
-                    NetworkStream networkStream = masterSocket.GetStream();
-                    networkStream.Read(TransportPackage.Data, 0, masterSocket.ReceiveBufferSize);
+                    NetworkStream networkStream = Socket.GetStream();
+                    networkStream.Read(TransportPackage.Data, 0, Socket.ReceiveBufferSize);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     BaseInfo Info = (BaseInfo)package.Content;
-                    Info.Connector = new Connector(masterSocket);
-                    DataStructure.MasterList.Add(Info);
-                    Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
-                    Console.WriteLine("Master connected");
-                    foreach (var item in ddata)
+                    Info.Connector = new Connector();
+                    if (Info.Type == BaseInfoType.Client)
                     {
-                        Console.WriteLine("{0} - {1}", item.Key, item.Value);
+                        if (!DataStructure.ClientList.Contains(Info))
+                        {
+                            DataStructure.ClientList.Add(Info);
+                        }
                     }
-                    Info.Connector.StartConnection();
-                }
-            }
-            private void ClientListen()
-            {
-                TcpListener ClientServerSocket = new TcpListener(ClientIPEndPoint);
-                ClientServerSocket.Start();
-                while (true)
-                {
-                    TcpClient clientSocket = ClientServerSocket.AcceptTcpClient();
-                    TransportPackage TransportPackage = new TransportPackage();
-                    NetworkStream networkStream = clientSocket.GetStream();
-                    networkStream.Read(TransportPackage.Data, 0, clientSocket.ReceiveBufferSize);
-                    Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    BaseInfo Info = (BaseInfo)package.Content;
-                    Info.Connector = new Connector(clientSocket);
-                    DataStructure.ClientList.Add(Info);
-                    Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
-                    Console.WriteLine("Client connected");
-                    foreach (var item in ddata)
+                    else if (Info.Type == BaseInfoType.Master)
                     {
-                        Console.WriteLine("{0} - {1}", item.Key, item.Value);
+                        if (!DataStructure.MasterList.Contains(Info))
+                        {
+                            DataStructure.MasterList.Add(Info);
+                        }
                     }
-                    Info.Connector.StartConnection();
-                    Package wcPackage = new Package("Client " + Info.UID + " connected", new BaseInfo(BaseInfoType.Master), new BaseInfo(BaseInfoType.Server));
-                    foreach (BaseInfo master in DataStructure.MasterList)
+                    if (!DataStructure.ClientList.Contains(Info) || !DataStructure.MasterList.Contains(Info))
                     {
-                        TcpClient communicationSocket = master.Connector.ClientSocket;
-                        NetworkStream communicationStream = communicationSocket.GetStream();
-                        TransportPackage TransportPackageC = Serializer.Serialize(wcPackage);
-                        communicationStream.Write(TransportPackageC.Data, 0, TransportPackageC.Data.Length);
-                        communicationStream.Flush();
+                        Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
+                        foreach (var item in ddata)
+                        {
+                            Console.WriteLine("{0} - {1}", item.Key, item.Value);
+                        }
+                        Info.Connector.StartConnection(Socket);
                     }
                 }
             }

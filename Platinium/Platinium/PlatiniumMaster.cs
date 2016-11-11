@@ -37,7 +37,7 @@ namespace Platinium
             {
                 while (true)
                 {
-                    Thread.Sleep(10000);
+                    Console.ReadLine();
                     Command command = new Command("OK", "OK".GetType());
                     BaseInfo to = new BaseInfo("2");
                     Package package = new Package(new Command(command, command.GetType()), to, MasterInfo);
