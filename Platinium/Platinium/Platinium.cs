@@ -15,10 +15,9 @@ using System.Runtime.Serialization;
 using Platinium.Shared.Plugin;
 using Platinium.Shared.Core;
 using Platinium.Shared.Data.Structures;
-using Platinium.Shared.Connection;
 using System.Threading;
-using Platinium.Shared.Communication;
 using Platinium.Shared.Content;
+using Platinium.Connection;
 
 namespace Platinium
 {
@@ -47,53 +46,7 @@ namespace Platinium
                 }
             }
         }
-        namespace Communication
-        {
-            public class Communicator
-            {
-                private Package Package { get; set; }
-                public Communicator(Package package)
-                {
-                    Package = package;
-                    Communicate();
-                }
-                private void Communicate()
-                {
-                    Console.WriteLine("COMMUNICATE");
-                    Console.WriteLine("TO {0}", Package.To.Type);
-                    if (Package.To.Type == BaseInfoType.Client)
-                    {
-                        foreach (var item in DataStructure.ClientList)
-                        {
-                            if (Package.To.UID == item.UID)
-                            {
-                                TcpClient communicationSocket = item.Connector.ClientSocket;
-                                NetworkStream communicationStream = communicationSocket.GetStream();
-                                TransportPackage TransportPackage = Serializer.Serialize(Package);
-                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                communicationStream.Flush();
-                                Console.WriteLine("SENT");
-                            }
-                        }
-                    }
-                    else if (Package.To.Type == BaseInfoType.Master)
-                    {
-                        foreach (var item in DataStructure.MasterList)
-                        {
-                            if (Package.To.UID == item.UID)
-                            {
-                                TcpClient communicationSocket = item.Connector.ClientSocket;
-                                NetworkStream communicationStream = communicationSocket.GetStream();
-                                TransportPackage TransportPackage = Serializer.Serialize(Package);
-                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                communicationStream.Flush();
-                                Console.WriteLine("SENT");
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        
         namespace Content
         {
             public interface IContent
@@ -114,40 +67,6 @@ namespace Platinium
                 {
                     Data = data;
                     DataType = datatype;
-                }
-
-            }
-        }
-        namespace Connection
-        {
-            [Serializable]
-            public class Connector
-            {
-                public TcpClient ClientSocket;
-                private static TcpClient clientSocket;
-                private static Communicator communicator;
-                public Connector(TcpClient inClientSocket)
-                {
-                    clientSocket = inClientSocket;
-                    ClientSocket = clientSocket;
-                }
-                public void StartConnection()
-                {
-                    handleConnection();
-                }
-                private static void handleConnection()
-                {
-                    while (true)
-                    {
-                        NetworkStream networkStream = clientSocket.GetStream();
-                        TransportPackage TransportPackage = new TransportPackage();
-                        networkStream.Read(TransportPackage.Data, 0, clientSocket.ReceiveBufferSize);
-                        networkStream.Flush();
-                        Package package = (Package)Serializer.Deserialize(TransportPackage);
-                        Console.WriteLine("GET PACKAGE\nType - {0}\nValue - {1}\nFrom - {2}\nTo - {3}", package.ContentType.ToString(), package.Content.ToString(), package.From.UID, package.To.UID);
-                        communicator = new Communicator(package);
-                        Thread.Sleep(1000);
-                    }
                 }
             }
         }

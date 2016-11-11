@@ -22,14 +22,19 @@ namespace Platinium
             private NetworkStream serverStream = default(NetworkStream);
             public PlatiniumClient()
             {
-                clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55556));
+                clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = clientSocket.GetStream();
                 Package package = new Package(ClientInfo, new BaseInfo(BaseInfoType.Server), ClientInfo);
                 TransportPackage TransportPackage = Serializer.Serialize(package);
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
                 Thread GetThread = new Thread(Get);
+                GetThread.IsBackground = true;
                 GetThread.Start();
+                while (true)
+                {
+
+                }
             }
             private void Write(BaseInfo to, BaseInfo from)
             {
