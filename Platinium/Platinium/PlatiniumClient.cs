@@ -29,16 +29,17 @@ namespace Platinium
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
                 Thread GetThread = new Thread(Get);
-                GetThread.IsBackground = true;
                 GetThread.Start();
-                while (true)
-                {
-
-                }
+                LoadPlugins();
             }
-            private void Write(BaseInfo to, BaseInfo from)
+            private void LoadPlugins()
             {
-                Package package = new Package(new Command("RECEIVE", "RECEIVE".GetType()), to, from);
+                Console.WriteLine("DOWNLOADING PLUGINS");
+                Package package = new Package(new BaseCommand("LOAD_PLUGINS", "LOAD_PLUGINS".GetType(), CommandType.PluginTransfer), new BaseInfo(BaseInfoType.Server), ClientInfo);
+                Write(package);
+            }
+            private void Write(Package package)
+            {
                 TransportPackage TransportPackage = Serializer.Serialize(package);
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
@@ -53,9 +54,10 @@ namespace Platinium
                     serverStream.Read(TransportPackage.Data, 0, clientSocket.ReceiveBufferSize);
                     serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    Command command = (Command)package.Content;
+                    BaseCommand command = (BaseCommand)package.Content;
                     Console.WriteLine(command.Data);
-                    Write(package.From, ClientInfo);
+                    package = new Package(new BaseCommand("RECEIVE", "RECEIVE".GetType(), CommandType.Base), new BaseInfo(BaseInfoType.Server), ClientInfo);
+                    Write(package);
                     Console.WriteLine("GET");
                 }
             }

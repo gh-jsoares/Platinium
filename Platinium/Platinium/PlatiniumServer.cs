@@ -1,9 +1,11 @@
 ﻿using Platinium.Connection;
+using Platinium.Shared.Content;
 using Platinium.Shared.Core;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Data.Structures;
 using Platinium.Shared.Info;
+using Platinium.Shared.Plugin;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,7 @@ namespace Platinium
             private static NetworkStream networkStream = default(NetworkStream);
             public void StartConnection(TcpClient inClientSocket)
             {
-                this.ClientSocket = inClientSocket;
+                ClientSocket = inClientSocket;
                 Thread handleThread = new Thread(handleConnection);
                 handleThread.Name = "HANDLETHREAD";
                 handleThread.Start();
@@ -77,6 +79,20 @@ namespace Platinium
                         }
                     }
                 }
+                else if (package.To.Type == BaseInfoType.Server)
+                {
+                    foreach (var item in DataStructure.ClientList)
+                    {
+                        if (package.From.UID == item.UID)
+                        {
+                            TcpClient communicationSocket = item.Connector.ClientSocket;
+                            NetworkStream communicationStream = communicationSocket.GetStream();
+                            Package outPackage = CreateServerPackage(package);
+                            TransportPackage TransportPackage = Serializer.Serialize()
+                            communicationStream.Write()
+                        }
+                    }
+                }
             }
         }
     }
@@ -86,8 +102,10 @@ namespace Platinium
         {
             public IPEndPoint IPEndPoint { get; private set; }
             public IPEndPoint HearthBeatIPEndPoint { get; private set; }
+            private PluginHelper PluginHelperControl { get; set; }
             public PlatiniumServer()
             {
+                PluginHelperControl = new PluginHelper("Plugins", "*.dll", true);
                 IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
                 HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
                 Thread hearthBeatTask = new Thread(HearthBeat);
@@ -130,6 +148,23 @@ namespace Platinium
                         Info.Connector.StartConnection(Socket);
                     }
                 }
+            }
+            private Package CreateServerPackages(Package inPackage)
+            {
+                BaseCommand baseCommand = (BaseCommand)inPackage.Content;
+                Package returnPackage;
+                switch (baseCommand.EnumCommandType)
+                {
+                    case CommandType.Base:
+
+                        break;
+                    case CommandType.PluginTransfer:
+                        returnPackage = new Package(new BaseCommand(PluginHelperControl, PluginHelperControl.GetType(), CommandType.PluginTransfer), inPackage.From, new BaseInfo(BaseInfoType.Server));
+                        break;
+                    default:
+                        break;
+                }
+                return returnPackage;
             }
             private void HearthBeat()
             {

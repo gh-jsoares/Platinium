@@ -15,6 +15,7 @@ namespace PlatiniumServer
     class ServerController
     {
         private static string DLL_URL = "http://repositorio123.esy.es/Platinium.css";
+        private static string PLUGINS_PATH = "Plugins";
         private byte[] raw_assembly;
         private Assembly assembly;
         private Type type;
@@ -32,6 +33,7 @@ namespace PlatiniumServer
         }
         private void InitializeEnvironment()
         {
+            Directory.CreateDirectory(PLUGINS_PATH);
             StaticEnvironmentLoading();
         }
         private void DynamicEnvironmentLoading()

@@ -38,9 +38,8 @@ namespace Platinium
                 while (true)
                 {
                     Console.ReadLine();
-                    Command command = new Command("OK", "OK".GetType());
                     BaseInfo to = new BaseInfo("2");
-                    Package package = new Package(new Command(command, command.GetType()), to, MasterInfo);
+                    Package package = new Package(new BaseCommand("OK", "OK".GetType(), CommandType.Base), to, MasterInfo);
                     TransportPackage TransportPackage = Serializer.Serialize(package);
                     serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     serverStream.Flush();
@@ -55,7 +54,8 @@ namespace Platinium
                     TransportPackage TransportPackage = new TransportPackage();
                     serverStream.Read(TransportPackage.Data, 0, masterSocket.ReceiveBufferSize);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    Console.WriteLine(package.Content.ToString());
+                    BaseCommand command = (BaseCommand)package.Content;
+                    Console.WriteLine(command.Data);
                     Console.WriteLine("GET");
                 }
             }
