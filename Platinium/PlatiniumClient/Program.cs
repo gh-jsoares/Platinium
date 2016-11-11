@@ -13,7 +13,6 @@ namespace PlatiniumClient
         {
             Thread.Sleep(5000);
             ClientController client = new ClientController();
-            Console.ReadLine();
         }
     }
 }

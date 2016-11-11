@@ -45,6 +45,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Platinium.cs" />
+    <Compile Include="PlatiniumClient.cs" />
+    <Compile Include="PlatiniumMaster.cs" />
+    <Compile Include="PlatiniumServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

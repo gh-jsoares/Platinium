@@ -11,7 +11,6 @@ namespace PlatiniumServer
         static void Main(string[] args)
         {
             ServerController server = new ServerController();
-            Console.ReadLine();
         }
     }
 }
