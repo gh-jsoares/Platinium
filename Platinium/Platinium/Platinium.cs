@@ -49,7 +49,6 @@ namespace Platinium
                 }
             }
         }
-
         namespace Content
         {
             public enum PackageType
@@ -275,7 +274,7 @@ namespace Platinium
                             case PackageType.Plugin:
                                 if (baseCommand.Data.ToString() == "LOAD_PLUGINS")
                                 {
-                                    returnPackage = new Package(new BaseCommand(DataStructure.AssemblyList[0], typeof(string)), PackageType.Plugin, new BaseInfo(BaseInfoType.Server));
+                                    returnPackage = new Package(DataStructure.AssemblyList, PackageType.Plugin, new BaseInfo(BaseInfoType.Server));
                                 }
                                 break;
                             default:

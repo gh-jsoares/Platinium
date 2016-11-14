@@ -24,10 +24,7 @@ namespace Platinium
             {
                 clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = clientSocket.GetStream();
-                Package package = new Package(ClientInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), ClientInfo);
-                TransportPackage TransportPackage = Serializer.Serialize(package);
-                serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                serverStream.Flush();
+                Write(new Package(ClientInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), ClientInfo));
                 Thread GetThread = new Thread(Get);
                 GetThread.Start();
                 LoadPlugins();
@@ -35,8 +32,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Package package = new Package(new BaseCommand("LOAD_PLUGINS", "LOAD_PLUGINS".GetType()), PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo);
-                Write(package);
+                Write(new Package(new BaseCommand("LOAD_PLUGINS", "LOAD_PLUGINS".GetType()), PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo));
             }
             private void Write(Package package)
             {
