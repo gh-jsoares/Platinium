@@ -264,7 +264,6 @@ namespace Platinium
                 {
                     public static Package HandleServerPackages(Package inPackage)
                     {
-                        BaseCommand baseCommand = (BaseCommand)inPackage.Content;
                         Package returnPackage = inPackage;
                         switch (inPackage.PackageType)
                         {
@@ -272,7 +271,7 @@ namespace Platinium
                                 returnPackage = inPackage;
                                 break;
                             case PackageType.Plugin:
-                                if (baseCommand.Data.ToString() == "LOAD_PLUGINS")
+                                if (inPackage.Content.ToString() == "LOAD_PLUGINS")
                                 {
                                     returnPackage = new Package(DataStructure.AssemblyList, PackageType.Plugin, new BaseInfo(BaseInfoType.Server));
                                 }
@@ -285,7 +284,6 @@ namespace Platinium
                     }
                     public static Package HandleClientPackages(Package inPackage)
                     {
-                        BaseCommand baseCommand = (BaseCommand)inPackage.Content;
                         Package returnPackage = inPackage;
                         switch (inPackage.PackageType)
                         {
@@ -293,12 +291,16 @@ namespace Platinium
                                 returnPackage = inPackage;
                                 break;
                             case PackageType.Plugin:
-                                DataStructure.AssemblyList = (List<byte[]>)baseCommand.Data;
+                                DataStructure.AssemblyList = (List<byte[]>)inPackage.Content;
                                 Console.WriteLine("LOADED ASSEMBLIES");
                                 foreach (var assemblyData in DataStructure.AssemblyList)
                                 {
                                     Assembly assembly = Assembly.Load(assemblyData);
                                     DataStructure.LoadedAssemblyList.Add(assembly);
+                                }
+                                foreach (var item in DataStructure.LoadedAssemblyList)
+                                {
+                                    Console.WriteLine(item.CodeBase);
                                 }
                                 break;
                             default:

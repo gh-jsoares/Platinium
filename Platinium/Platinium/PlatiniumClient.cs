@@ -32,7 +32,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Write(new Package(new BaseCommand("LOAD_PLUGINS", "LOAD_PLUGINS".GetType()), PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo));
+                Write(new Package("LOAD_PLUGINS", PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo));
             }
             private void Write(Package package)
             {
@@ -51,9 +51,8 @@ namespace Platinium
                     serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     package = PackageFactory.HandleClientPackages(package);
-                    BaseCommand bC = (BaseCommand)package.Content;
-                    Console.WriteLine(bC.Data.ToString());
-                    Console.WriteLine(bC.DataType.ToString());
+                    Console.WriteLine(package.Content.ToString());
+                    Console.WriteLine(package.PackageType.ToString());
                     Console.WriteLine("GET");
                 }
             }

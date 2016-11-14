@@ -38,7 +38,7 @@ namespace Platinium
                 while (true)
                 {
                     Console.ReadLine();
-                    Package package = new Package(new BaseCommand(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, typeof(byte[])), PackageType.Base, new BaseInfo("2"), MasterInfo);
+                    Package package = new Package(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, PackageType.Base, new BaseInfo("2"), MasterInfo);
                     TransportPackage TransportPackage = Serializer.Serialize(package);
                     serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     serverStream.Flush();
