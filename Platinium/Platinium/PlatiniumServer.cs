@@ -40,14 +40,14 @@ namespace Platinium
                     networkStream = null;
                     networkStream = ClientSocket.GetStream();
                     TransportPackage TransportPackage = new TransportPackage();
-                    networkStream.Read(TransportPackage.Data, 0, ClientSocket.ReceiveBufferSize);
+                    networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     networkStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    Console.WriteLine("GET PACKAGE\nType - {0}\nValue - {1}\nFrom - {2}\nTo - {3}", package.ContentType.ToString(), package.Content.ToString(), package.From.UID, package.To.UID);
+                    Console.WriteLine("GET PACKAGE\nType - {0}\nValue - {1}\nFrom - {2}\nTo - {3}", package.PackageType.ToString(), package.Content.ToString(), package.From.UID, package.To.UID);
                     Communicate(package);
                 }
             }
-            private static void Communicate(Package package)
+            public static void Communicate(Package package)
             {
                 Console.WriteLine("COMMUNICATE");
                 Console.WriteLine("TO {0}", package.To.Type);
@@ -83,15 +83,23 @@ namespace Platinium
                 }
                 else if (package.To.Type == BaseInfoType.Server)
                 {
-                    foreach (var item in DataStructure.ClientList)
+                    if (package.From.Type == BaseInfoType.Master)
                     {
-                        if (package.From.UID == item.UID)
+
+                    }
+                    else if (package.From.Type == BaseInfoType.Client)
+                    {
+                        foreach (var item in DataStructure.ClientList)
                         {
-                            TcpClient communicationSocket = item.Connector.ClientSocket;
-                            NetworkStream communicationStream = communicationSocket.GetStream();
-                            Package outPackage = CreateServerPackage(package);
-                            TransportPackage TransportPackage = Serializer.Serialize()
-                            communicationStream.Write()
+                            if (package.From.UID == item.UID)
+                            {
+                                TcpClient communicationSocket = item.Connector.ClientSocket;
+                                NetworkStream communicationStream = communicationSocket.GetStream();
+                                Package outPackage = PackageFactory.HandleServerPackages(package);
+                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
+                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                                Console.WriteLine("SENT");
+                            }
                         }
                     }
                 }
@@ -121,7 +129,7 @@ namespace Platinium
                     TcpClient Socket = ServerSocket.AcceptTcpClient();
                     TransportPackage TransportPackage = new TransportPackage();
                     NetworkStream networkStream = Socket.GetStream();
-                    networkStream.Read(TransportPackage.Data, 0, Socket.ReceiveBufferSize);
+                    networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     BaseInfo Info = (BaseInfo)package.Content;
                     Info.Connector = new Connector();
@@ -150,31 +158,18 @@ namespace Platinium
                     }
                 }
             }
-            private Package CreateServerPackages(Package inPackage)
-            {
-                BaseCommand baseCommand = (BaseCommand)inPackage.Content;
-                Package returnPackage;
-                switch (baseCommand.EnumCommandType)
-                {
-                    case CommandType.Base:
-
-                        break;
-                    case CommandType.PluginTransfer:
-
-                        break;
-                    default:
-                        break;
-                }
-                return returnPackage;
-            }
             private void LoadPlugins()
             {
                 string[] dllFiles = Directory.GetFiles("Plugins", "*.dll", SearchOption.AllDirectories);
                 foreach (string file in dllFiles)
                 {
-                    Assembly assemb = Assembly.LoadFrom(file);
-
-                    DataStructure.AssemblyList.Add(assemb);
+                    byte[] buffer = null;
+                    using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
+                    {
+                        buffer = new byte[fs.Length];
+                        fs.Read(buffer, 0, (int)fs.Length);
+                    }
+                    DataStructure.AssemblyList.Add(buffer);
                 }
             }
             private void HearthBeat()

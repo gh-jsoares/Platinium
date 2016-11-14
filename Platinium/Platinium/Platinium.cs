@@ -52,32 +52,33 @@ namespace Platinium
 
         namespace Content
         {
-            public enum CommandType
+            public enum PackageType
             {
                 Base,
-                PluginTransfer
+                Plugin,
+                Status,
+                NoResponse,
+                ClientResponse,
+                ServerResponse
             }
             public interface IContent
             {
                 object Data { get; set; }
                 Type DataType { get; set; }
-                CommandType EnumCommandType { get; set; }
             }
             [Serializable]
             public class BaseCommand : IContent
             {
                 public object Data { get; set; }
                 public Type DataType { get; set; }
-                public CommandType EnumCommandType { get; set; }
                 public BaseCommand()
                 {
 
                 }
-                public BaseCommand(object data, Type datatype, CommandType enumcommandtype)
+                public BaseCommand(object data, Type datatype)
                 {
                     Data = data;
                     DataType = datatype;
-                    EnumCommandType = enumcommandtype;
                 }
             }
         }
@@ -100,10 +101,6 @@ namespace Platinium
                 IEnumerable<dynamic> GetDictionaryKeys();
                 IEnumerable<dynamic> GetDictionaryValues();
             }
-            public interface IPluginServerSide
-            {
-
-            }
             /// <summary>
             /// The IPluginMetadata interface.
             /// </summary>
@@ -116,6 +113,7 @@ namespace Platinium
             /// <summary>
             /// The PluginMetadataAttribute Class
             /// </summary>
+            [Serializable]
             [MetadataAttribute]
             [AttributeUsage(AttributeTargets.Class)]
             public class PluginMetadataAttribute : ExportAttribute, IPluginMetadata
@@ -146,6 +144,7 @@ namespace Platinium
                 /// </summary>
                 public string Description { get; set; }
             }
+            [Serializable]
             /// <summary>
             /// The Plugin Class is derived from the IPlugin Interface. This is the base class for all the plugins developed.
             /// All Plugins must follow this class guidelines.
@@ -157,6 +156,9 @@ namespace Platinium
                 /// </summary>
                 protected abstract Dictionary<dynamic, dynamic> Properties { get; set; }
                 protected abstract Dictionary<dynamic, dynamic> InternalProperties { get; set; }
+                protected abstract byte[] ServerSideData { get; set; }
+                protected abstract byte[] ClientSideData { get; set; }
+                protected abstract byte[] MasterSideData { get; set; }
                 /// <summary>
                 /// The Plugin Constructor that sets the Properties when the Plugin is called.
                 /// </summary>
@@ -261,7 +263,51 @@ namespace Platinium
             {
                 public class PackageFactory
                 {
-
+                    public static Package HandleServerPackages(Package inPackage)
+                    {
+                        BaseCommand baseCommand = (BaseCommand)inPackage.Content;
+                        Package returnPackage = inPackage;
+                        switch (inPackage.PackageType)
+                        {
+                            case PackageType.Base:
+                                returnPackage = inPackage;
+                                break;
+                            case PackageType.Plugin:
+                                if (baseCommand.Data.ToString() == "LOAD_PLUGINS")
+                                {
+                                    returnPackage = new Package(new BaseCommand(DataStructure.AssemblyList[0], typeof(string)), PackageType.Plugin, new BaseInfo(BaseInfoType.Server));
+                                }
+                                break;
+                            default:
+                                returnPackage = inPackage;
+                                break;
+                        }
+                        return returnPackage;
+                    }
+                    public static Package HandleClientPackages(Package inPackage)
+                    {
+                        BaseCommand baseCommand = (BaseCommand)inPackage.Content;
+                        Package returnPackage = inPackage;
+                        switch (inPackage.PackageType)
+                        {
+                            case PackageType.Base:
+                                returnPackage = inPackage;
+                                break;
+                            case PackageType.Plugin:
+                                DataStructure.AssemblyList = (List<byte[]>)baseCommand.Data;
+                                Console.WriteLine("LOADED ASSEMBLIES");
+                                foreach (var assemblyData in DataStructure.AssemblyList)
+                                {
+                                    Assembly assembly = Assembly.Load(assemblyData);
+                                    DataStructure.LoadedAssemblyList.Add(assembly);
+                                }
+                                break;
+                            default:
+                                returnPackage = inPackage;
+                                break;
+                        }
+                        return returnPackage;
+                    }
                 }
                 [Serializable]
                 public class Package
@@ -269,25 +315,25 @@ namespace Platinium
                     public BaseInfo To { get; private set; }
                     public BaseInfo From { get; private set; }
                     public object Content { get; private set; }
-                    public Type ContentType { get; private set; }
-                    public Package(object obj, BaseInfo to, BaseInfo from)
+                    public PackageType PackageType { get; private set; }
+                    public Package(object obj, PackageType packagetype, BaseInfo to, BaseInfo from)
                     {
                         To = to;
+                        PackageType = packagetype;
                         From = from;
                         Content = obj;
-                        ContentType = obj.GetType();
                     }
-                    public Package(object obj, BaseInfo from)
+                    public Package(object obj, PackageType packagetype, BaseInfo from)
                     {
                         From = from;
                         Content = obj;
-                        ContentType = obj.GetType();
+                        PackageType = packagetype;
                     }
                 }
                 [Serializable]
                 public class TransportPackage
                 {
-                    public byte[] Data = new byte[65536];
+                    public byte[] Data = new byte[1048576];
                     public TransportPackage()
                     {
 
@@ -300,11 +346,21 @@ namespace Platinium
             }
             namespace Serialization
             {
-                public class Binder : SerializationBinder
+                sealed class AllowAllAssemblyVersionsDeserializationBinder : SerializationBinder
                 {
-                    public override Type BindToType(string i_AssemblyName, string i_TypeName)
+                    public override Type BindToType(string assemblyName, string typeName)
                     {
-                        Type typeToDeserialize = Type.GetType(i_TypeName);
+                        Type typeToDeserialize = null;
+
+                        String currentAssembly = Assembly.GetExecutingAssembly().FullName;
+
+                        // In this case we are always using the current assembly
+                        assemblyName = currentAssembly;
+
+                        // Get the type using the typeName and assemblyName
+                        typeToDeserialize = Type.GetType(String.Format("{0}, {1}",
+                            typeName, assemblyName));
+
                         return typeToDeserialize;
                     }
                 }
@@ -314,7 +370,9 @@ namespace Platinium
                     {
                         using (var memoryStream = new MemoryStream())
                         {
-                            (new BinaryFormatter()).Serialize(memoryStream, objToSerialize);
+                            BinaryFormatter bf = new BinaryFormatter();
+                            bf.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
+                            (bf).Serialize(memoryStream, objToSerialize);
                             return new TransportPackage(memoryStream.ToArray());
                         }
                     }
@@ -323,7 +381,25 @@ namespace Platinium
                         using (var memoryStream = new MemoryStream(package.Data))
                         {
                             BinaryFormatter bf = new BinaryFormatter();
-                            bf.Binder = new Binder();
+                            bf.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
+                            memoryStream.Seek(0, SeekOrigin.Begin);
+                            return (bf).Deserialize(memoryStream);
+                        }
+                    }
+                    public static byte[] SerializeToByte(object objToSerialize)
+                    {
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            (new BinaryFormatter()).Serialize(memoryStream, objToSerialize);
+                            return memoryStream.ToArray();
+                        }
+                    }
+                    public static object DeserializeFromByte(byte[] data)
+                    {
+                        using (var memoryStream = new MemoryStream(data))
+                        {
+                            BinaryFormatter bf = new BinaryFormatter();
+                            bf.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
                             return (bf).Deserialize(memoryStream);
                         }
                     }
@@ -336,8 +412,9 @@ namespace Platinium
                 {
                     public static List<BaseInfo> MasterList = new List<BaseInfo>();
                     public static List<BaseInfo> ClientList = new List<BaseInfo>();
-                    public static Dictionary<IPluginMetadata, Plugin.PluginClass> PluginDictionary = new Dictionary<IPluginMetadata, Plugin.PluginClass>();
-                    public static List<Assembly> AssemblyList = new List<Assembly>();
+                    public static Dictionary<IPluginMetadata, PluginClass> PluginDictionary = new Dictionary<IPluginMetadata, Plugin.PluginClass>();
+                    public static List<byte[]> AssemblyList = new List<byte[]>();
+                    public static List<Assembly> LoadedAssemblyList = new List<Assembly>();
                 }
             }
         }

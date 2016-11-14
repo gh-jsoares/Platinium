@@ -1,6 +1,8 @@
-﻿using Platinium.Shared.Plugin;
+﻿using Platinium.Shared.Data.Serialization;
+using Platinium.Shared.Plugin;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -16,16 +18,23 @@ public class Plugin : PluginClass
     }
     protected override Dictionary<dynamic, dynamic> InternalProperties { get; set; }
     protected override Dictionary<dynamic, dynamic> Properties { get; set; }
+    protected override byte[] ClientSideData { get; set; }
+    protected override byte[] MasterSideData { get; set; }
+    protected override byte[] ServerSideData { get; set; }
 
+    [Description("Initialize")]
     public override void Initialize()
     {
         InternalProperties.Add("url", "http://freegeoip.net/xml/");
+        ClientSideData = Serializer.SerializeToByte(new ClientSide());
     }
 
+    [Description("Load Plugin")]
     public override void LoadPlugin()
     {
         GetGeoIPData();
     }
+    [Description("Get Geo-IP Data")]
     private void GetGeoIPData()
     {
         WebClient wc = new WebClient
@@ -42,6 +51,13 @@ public class Plugin : PluginClass
         foreach (XmlElement el in doc.ChildNodes[0].ChildNodes)
         {
             Properties[el.Name] = el.InnerText;
+        }
+    }
+    class ClientSide
+    {
+        public ClientSide()
+        {
+
         }
     }
 }

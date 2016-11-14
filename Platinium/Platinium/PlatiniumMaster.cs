@@ -24,7 +24,7 @@ namespace Platinium
             {
                 masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = masterSocket.GetStream();
-                Package package = new Package(MasterInfo, new BaseInfo(BaseInfoType.Server), MasterInfo);
+                Package package = new Package(MasterInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), MasterInfo);
                 TransportPackage TransportPackage = Serializer.Serialize(package);
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
@@ -38,8 +38,7 @@ namespace Platinium
                 while (true)
                 {
                     Console.ReadLine();
-                    BaseInfo to = new BaseInfo("2");
-                    Package package = new Package(new BaseCommand("OK", "OK".GetType(), CommandType.Base), to, MasterInfo);
+                    Package package = new Package(new BaseCommand(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, typeof(byte[])), PackageType.Base, new BaseInfo("2"), MasterInfo);
                     TransportPackage TransportPackage = Serializer.Serialize(package);
                     serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     serverStream.Flush();
@@ -52,7 +51,7 @@ namespace Platinium
                 {
                     serverStream = masterSocket.GetStream();
                     TransportPackage TransportPackage = new TransportPackage();
-                    serverStream.Read(TransportPackage.Data, 0, masterSocket.ReceiveBufferSize);
+                    serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     BaseCommand command = (BaseCommand)package.Content;
                     Console.WriteLine(command.Data);

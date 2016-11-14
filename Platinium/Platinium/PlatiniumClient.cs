@@ -24,7 +24,7 @@ namespace Platinium
             {
                 clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = clientSocket.GetStream();
-                Package package = new Package(ClientInfo, new BaseInfo(BaseInfoType.Server), ClientInfo);
+                Package package = new Package(ClientInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), ClientInfo);
                 TransportPackage TransportPackage = Serializer.Serialize(package);
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
@@ -35,7 +35,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Package package = new Package(new BaseCommand("LOAD_PLUGINS", "LOAD_PLUGINS".GetType(), CommandType.PluginTransfer), new BaseInfo(BaseInfoType.Server), ClientInfo);
+                Package package = new Package(new BaseCommand("LOAD_PLUGINS", "LOAD_PLUGINS".GetType()), PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo);
                 Write(package);
             }
             private void Write(Package package)
@@ -51,13 +51,13 @@ namespace Platinium
                 {
                     serverStream = clientSocket.GetStream();
                     TransportPackage TransportPackage = new TransportPackage();
-                    serverStream.Read(TransportPackage.Data, 0, clientSocket.ReceiveBufferSize);
+                    serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    BaseCommand command = (BaseCommand)package.Content;
-                    Console.WriteLine(command.Data);
-                    package = new Package(new BaseCommand("RECEIVE", "RECEIVE".GetType(), CommandType.Base), new BaseInfo(BaseInfoType.Server), ClientInfo);
-                    Write(package);
+                    package = PackageFactory.HandleClientPackages(package);
+                    BaseCommand bC = (BaseCommand)package.Content;
+                    Console.WriteLine(bC.Data.ToString());
+                    Console.WriteLine(bC.DataType.ToString());
                     Console.WriteLine("GET");
                 }
             }
