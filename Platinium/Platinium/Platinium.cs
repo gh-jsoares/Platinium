@@ -135,6 +135,16 @@ namespace Platinium
                                         break;
                                 }
                                 break;
+                            case PackageType.PluginCommand:
+                                break;
+                            case PackageType.Status:
+                                break;
+                            case PackageType.NoResponse:
+                                break;
+                            case PackageType.ClientResponse:
+                                break;
+                            case PackageType.ServerResponse:
+                                break;
                             default:
                                 returnPackage = inPackage;
                                 break;
@@ -232,8 +242,10 @@ namespace Platinium
                                 {
                                     IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
                                     var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
+                                    MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
                                     DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                                     plugin.InstantiateMaster();
+                                    DataStructure.PluginMethodDictionary.Add(pluginMetadata,)
                                 }
                                 break;
                             case PackageType.PluginCommand:
@@ -356,6 +368,7 @@ namespace Platinium
                     public static List<BaseInfo> MasterList = new List<BaseInfo>();
                     public static List<BaseInfo> ClientList = new List<BaseInfo>();
                     public static Dictionary<Metadata, IPlugin> PluginDictionary = new Dictionary<Metadata, IPlugin>();
+                    public static Dictionary<Metadata, MethodInfo[]> PluginMethodDictionary = new Dictionary<Metadata, MethodInfo[]>();
                     public static List<byte[]> AssemblyList = new List<byte[]>();
                     public static List<Assembly> LoadedAssemblyList = new List<Assembly>();
                 }
