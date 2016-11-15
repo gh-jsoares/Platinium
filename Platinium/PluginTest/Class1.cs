@@ -10,54 +10,63 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-[PluginMetadata("PluginGeoIP", "1.0.0.0", "Plugin that returns XML data of the GEO-Location")]
-public class Plugin : PluginClass
+[Metadata(Name = "TEST")]
+public class Plugin : IPlugin
 {
-    public Plugin() : base(new Dictionary<dynamic, dynamic>(), new Dictionary<dynamic, dynamic>())
+    public string TEST = "OLA";
+    public IPluginClientSide ClientSide { get; set; }
+    public IPluginServerSide ServerSide { get; set; }
+    public IPluginMasterSide MasterSide { get; set; }
+    public Plugin()
     {
-    }
-    protected override Dictionary<dynamic, dynamic> InternalProperties { get; set; }
-    protected override Dictionary<dynamic, dynamic> Properties { get; set; }
-    protected override byte[] ClientSideData { get; set; }
-    protected override byte[] MasterSideData { get; set; }
-    protected override byte[] ServerSideData { get; set; }
 
-    [Description("Initialize")]
-    public override void Initialize()
-    {
-        InternalProperties.Add("url", "http://freegeoip.net/xml/");
-        ClientSideData = Serializer.SerializeToByte(new ClientSide());
     }
+    public void Action()
+    {
 
-    [Description("Load Plugin")]
-    public override void LoadPlugin()
-    {
-        GetGeoIPData();
     }
-    [Description("Get Geo-IP Data")]
-    private void GetGeoIPData()
+    public void InstantiateClient()
     {
-        WebClient wc = new WebClient
-        {
-            Encoding = Encoding.UTF8,
-            Proxy = null
-        };
-        MemoryStream ms = new MemoryStream(wc.DownloadData(InternalProperties["url"]));
-        XmlTextReader rdr = new XmlTextReader(InternalProperties["url"]);
-        XmlDocument doc = new XmlDocument();
-        ms.Position = 0;
-        doc.Load(ms);
-        ms.Dispose();
-        foreach (XmlElement el in doc.ChildNodes[0].ChildNodes)
-        {
-            Properties[el.Name] = el.InnerText;
-        }
+        ClientSide = new PluginClientSide();
     }
-    class ClientSide
+    public void InstantiateServer()
     {
-        public ClientSide()
-        {
+        ServerSide = new PluginServerSide();
+    }
+    public void InstantiateMaster()
+    {
+        MasterSide = new PluginMasterSide();
+    }
+}
+public class PluginClientSide : IPluginClientSide
+{
+    public string TESTEST = "OLAOLA";
+    public PluginClientSide()
+    {
 
-        }
+    }
+    public void Action()
+    {
+        throw new NotImplementedException();
+    }
+}
+public class PluginServerSide : IPluginServerSide
+{
+    public string TT = "00001";
+    public PluginServerSide()
+    {
+
+    }
+    public void Action()
+    {
+        throw new NotImplementedException();
+    }
+}
+public class PluginMasterSide : IPluginMasterSide
+{
+    public string OO = "00003";
+    public void Action()
+    {
+        throw new NotImplementedException();
     }
 }

@@ -59,7 +59,8 @@ namespace Platinium
                         {
                             TcpClient communicationSocket = item.Connector.ClientSocket;
                             NetworkStream communicationStream = communicationSocket.GetStream();
-                            TransportPackage TransportPackage = Serializer.Serialize(package);
+                            Package outPackage = PackageFactory.HandleServerPackages(package);
+                            TransportPackage TransportPackage = Serializer.Serialize(outPackage);
                             communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                             communicationStream.Flush();
                             Console.WriteLine("SENT");
@@ -74,7 +75,8 @@ namespace Platinium
                         {
                             TcpClient communicationSocket = item.Connector.ClientSocket;
                             NetworkStream communicationStream = communicationSocket.GetStream();
-                            TransportPackage TransportPackage = Serializer.Serialize(package);
+                            Package outPackage = PackageFactory.HandleServerPackages(package);
+                            TransportPackage TransportPackage = Serializer.Serialize(outPackage);
                             communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                             communicationStream.Flush();
                             Console.WriteLine("SENT");
@@ -85,7 +87,19 @@ namespace Platinium
                 {
                     if (package.From.Type == BaseInfoType.Master)
                     {
-
+                        foreach (var item in DataStructure.MasterList)
+                        {
+                            if (package.From.UID == item.UID)
+                            {
+                                TcpClient communicationSocket = item.Connector.ClientSocket;
+                                NetworkStream communicationStream = communicationSocket.GetStream();
+                                Package outPackage = PackageFactory.HandleServerPackages(package);
+                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
+                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                                communicationStream.Flush();
+                                Console.WriteLine("SENT");
+                            }
+                        }
                     }
                     else if (package.From.Type == BaseInfoType.Client)
                     {
@@ -98,6 +112,7 @@ namespace Platinium
                                 Package outPackage = PackageFactory.HandleServerPackages(package);
                                 TransportPackage TransportPackage = Serializer.Serialize(outPackage);
                                 communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                                communicationStream.Flush();
                                 Console.WriteLine("SENT");
                             }
                         }
@@ -160,6 +175,7 @@ namespace Platinium
             }
             private void LoadPlugins()
             {
+                Console.WriteLine("*************** LOADING PLUGINS ***************");
                 string[] dllFiles = Directory.GetFiles("Plugins", "*.dll", SearchOption.AllDirectories);
                 foreach (string file in dllFiles)
                 {
@@ -171,6 +187,38 @@ namespace Platinium
                     }
                     DataStructure.AssemblyList.Add(buffer);
                 }
+                Console.WriteLine("* PLUGINS FOUND: {0}", dllFiles.Length);
+                foreach (var assemblyData in DataStructure.AssemblyList)
+                {
+                    Assembly assembly = Assembly.Load(assemblyData);
+                    DataStructure.LoadedAssemblyList.Add(assembly);
+                }
+                Type pluginType = typeof(IPlugin);
+                ICollection<Type> pluginTypes = new List<Type>();
+                foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
+                {
+                    Type[] types = assembly.GetTypes();
+                    foreach (Type type in types)
+                    {
+                        if (!type.IsInterface || !type.IsAbstract)
+                        {
+                            if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
+                            {
+                                pluginTypes.Add(type);
+                                Console.WriteLine("* PLUGIN: {0}", type.ToString());
+                            }
+                        }
+                    }
+                }
+                foreach (Type type in pluginTypes)
+                {
+                    IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                    var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
+                    DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
+                    plugin.InstantiateServer();
+                    Console.WriteLine("* {0} INSTANTIATED", type.ToString());
+                }
+                Console.WriteLine("*************** FINNISHED LOADING PLUGINS ***************");
             }
             private void HearthBeat()
             {

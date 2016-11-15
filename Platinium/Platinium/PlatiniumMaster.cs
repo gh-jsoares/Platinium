@@ -30,20 +30,19 @@ namespace Platinium
                 serverStream.Flush();
                 Thread GetThread = new Thread(Get);
                 GetThread.Start();
-                Thread WriteThread = new Thread(Write);
-                WriteThread.Start();
+                //Thread WriteThread = new Thread(Write);
+                //WriteThread.Start();
+                Write(new Package("OLA", PackageType.Base, new BaseInfo("2"), MasterInfo));
+                Console.ReadLine();
+                Write(new Package("LOAD_PLUGINS", PackageType.Plugin, new BaseInfo(BaseInfoType.Server), MasterInfo));
+                Console.ReadLine();
             }
-            private void Write()
+            private void Write(Package package)
             {
-                while (true)
-                {
-                    Console.ReadLine();
-                    Package package = new Package(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, PackageType.Base, new BaseInfo("2"), MasterInfo);
-                    TransportPackage TransportPackage = Serializer.Serialize(package);
-                    serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                    serverStream.Flush();
-                    Console.WriteLine("WRITE");
-                }
+                TransportPackage TransportPackage = Serializer.Serialize(package);
+                serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                serverStream.Flush();
+                Console.WriteLine("WRITE");
             }
             private void Get()
             {
@@ -53,8 +52,7 @@ namespace Platinium
                     TransportPackage TransportPackage = new TransportPackage();
                     serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    BaseCommand command = (BaseCommand)package.Content;
-                    Console.WriteLine(command.Data);
+                    package = PackageFactory.HandleMasterPackages(package);
                     Console.WriteLine("GET");
                 }
             }
