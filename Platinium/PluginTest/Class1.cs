@@ -1,4 +1,7 @@
-﻿using Platinium.Shared.Data.Serialization;
+﻿using Platinium;
+using Platinium.Shared.Data.Packages;
+using Platinium.Shared.Data.Serialization;
+using Platinium.Shared.Info;
 using Platinium.Shared.Plugin;
 using System;
 using System.Collections.Generic;
@@ -8,15 +11,15 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 
 [Metadata(Name = "TEST")]
 public class Plugin : IPlugin
 {
     public string TEST = "OLA";
-    public IPluginClientSide ClientSide { get; set; }
-    public IPluginServerSide ServerSide { get; set; }
-    public IPluginMasterSide MasterSide { get; set; }
+    public IPluginClientController ClientController { get; set; }
+    public UserControlModule PluginInterfaceControl { get; set; }
     public Plugin()
     {
 
@@ -27,46 +30,20 @@ public class Plugin : IPlugin
     }
     public void InstantiateClient()
     {
-        ClientSide = new PluginClientSide();
-    }
-    public void InstantiateServer()
-    {
-        ServerSide = new PluginServerSide();
-    }
-    public void InstantiateMaster()
-    {
-        MasterSide = new PluginMasterSide();
+        ClientController = new PluginClientSide();
     }
 }
-public class PluginClientSide : IPluginClientSide
+public class PluginClientSide : IPluginClientController
 {
     public string TESTEST = "OLAOLA";
     public PluginClientSide()
     {
 
     }
-    public void Action()
+    public Package Action(Package inPackage)
     {
-        throw new NotImplementedException();
-    }
-}
-public class PluginServerSide : IPluginServerSide
-{
-    public string TT = "00001";
-    public PluginServerSide()
-    {
-
-    }
-    public void Action()
-    {
-        throw new NotImplementedException();
-    }
-}
-public class PluginMasterSide : IPluginMasterSide
-{
-    public string OO = "00003";
-    public void Action()
-    {
-        throw new NotImplementedException();
+        Package returnPackage = inPackage;
+        returnPackage = new Package("TEST|Action", "PLUGIN ACTION WORKING", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.From, inPackage.To);
+        return returnPackage;
     }
 }

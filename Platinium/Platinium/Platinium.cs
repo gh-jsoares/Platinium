@@ -19,6 +19,7 @@ using System.Threading;
 using Platinium.Shared.Content;
 using Platinium.Connection;
 using System.Reflection;
+using System.Windows.Forms;
 
 namespace Platinium
 {
@@ -31,7 +32,7 @@ namespace Platinium
                 public static Dictionary<string, object> ClassToDictionary(object objectToConvert)
                 {
                     return objectToConvert.GetType()
-                         .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                         .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                          .ToDictionary(prop => prop.Name, prop => prop.GetValue(objectToConvert, null));
                 }
                 public static List<Dictionary<string, object>> ClassToDictionaryList(List<object> objectListToConvert)
@@ -40,10 +41,21 @@ namespace Platinium
                     foreach (object objectToConvert in objectListToConvert)
                     {
                         tempList.Add(objectToConvert.GetType()
-                         .GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)
+                         .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                          .ToDictionary(prop => prop.Name, prop => prop.GetValue(objectToConvert, null)));
                     }
                     return tempList;
+                }
+            }
+            public static class Extensions
+            {
+                public static string EmptyIfNull(this object value)
+                {
+                    if (value == null)
+                    {
+                        return "NULL";
+                    }
+                    return value.ToString();
                 }
             }
         }
@@ -56,8 +68,7 @@ namespace Platinium
                 PluginCommand,
                 Status,
                 NoResponse,
-                ClientResponse,
-                ServerResponse
+                Response
             }
             public interface IContent
             {
@@ -86,30 +97,48 @@ namespace Platinium
             {
                 void Action();
                 void InstantiateClient();
-                void InstantiateServer();
-                void InstantiateMaster();
-                IPluginClientSide ClientSide { get; set; }
-                IPluginServerSide ServerSide { get; set; }
-                IPluginMasterSide MasterSide { get; set; }
+                IPluginClientController ClientController { get; set; }
+                UserControlModule PluginInterfaceControl { get; set; }
             }
-            public interface IPluginClientSide
+            public interface IPluginClientController
             {
-                void Action();
-            }
-            public interface IPluginServerSide
-            {
-                void Action();
-            }
-            public interface IPluginMasterSide
-            {
-                void Action();
+                Package Action(Package inPackage);
             }
             public class Metadata : Attribute
             {
                 public string Name { get; set; }
             }
             public class PluginFactory
-            { }
+            {
+                public static Package HandlePluginMethods(Package inPackage, BaseInfoType baseInfoType)
+                {
+                    Package returnPackage = inPackage;
+                    string[] commands = inPackage.Command.Split('|');
+                    string plugin_name = commands[0];
+                    string plugin_command = commands[1];
+                    object[] command_parameters = { inPackage };
+                    Type type = DataStructure.PluginDictionary[new Metadata { Name = plugin_name }].ClientController.GetType();
+                    if (type != null)
+                    {
+                        MethodInfo methodInfo = type.GetMethod(plugin_command);
+                        if (methodInfo != null)
+                        {
+                            ParameterInfo[] parameters = methodInfo.GetParameters();
+                            IPlugin pluginInstance = DataStructure.PluginDictionary[new Metadata { Name = plugin_name }];
+
+                            if (parameters.Length == 0)
+                            {
+                                returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, null);
+                            }
+                            else
+                            {
+                                returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, command_parameters.ToArray());
+                            }
+                        }
+                    }
+                    return returnPackage;
+                }
+            }
         }
         namespace Data
         {
@@ -119,149 +148,158 @@ namespace Platinium
                 {
                     public static Package HandleServerPackages(Package inPackage)
                     {
-                        Package returnPackage = inPackage;
+                        Package returnPackage = new Package(null, null, PackageType.Response, inPackage.From, inPackage.To);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
                                 returnPackage = inPackage;
                                 break;
                             case PackageType.Plugin:
-                                switch (inPackage.Content.ToString())
+                                switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
-                                        returnPackage = new Package(DataStructure.AssemblyList, PackageType.Plugin, new BaseInfo(BaseInfoType.Server));
+                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyList, PackageType.Plugin, inPackage.From, inPackage.To);
                                         break;
                                     default:
                                         break;
                                 }
                                 break;
                             case PackageType.PluginCommand:
+                                returnPackage = inPackage;
                                 break;
                             case PackageType.Status:
                                 break;
                             case PackageType.NoResponse:
                                 break;
-                            case PackageType.ClientResponse:
-                                break;
-                            case PackageType.ServerResponse:
+                            case PackageType.Response:
                                 break;
                             default:
-                                returnPackage = inPackage;
                                 break;
                         }
                         return returnPackage;
                     }
                     public static Package HandleClientPackages(Package inPackage)
                     {
-                        Package returnPackage = inPackage;
+                        Package returnPackage = new Package(null, null, PackageType.Response, new BaseInfo(BaseInfoType.Server), inPackage.To);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
                                 returnPackage = inPackage;
                                 break;
                             case PackageType.Plugin:
-                                DataStructure.AssemblyList = (List<byte[]>)inPackage.Content;
-                                Console.WriteLine("LOADED ASSEMBLIES");
-                                foreach (var assemblyData in DataStructure.AssemblyList)
+                                switch (inPackage.Command)
                                 {
-                                    Assembly assembly = Assembly.Load(assemblyData);
-                                    DataStructure.LoadedAssemblyList.Add(assembly);
-                                }
-                                Type pluginType = typeof(IPlugin);
-                                ICollection<Type> pluginTypes = new List<Type>();
-                                foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
-                                {
-                                    Type[] types = assembly.GetTypes();
-                                    foreach (Type type in types)
-                                    {
-                                        if (!type.IsInterface || !type.IsAbstract)
+                                    case "LOAD_PLUGINS":
+                                        DataStructure.AssemblyList = (List<byte[]>)inPackage.Content;
+                                        Console.WriteLine("LOADED ASSEMBLIES");
+                                        foreach (var assemblyData in DataStructure.AssemblyList)
                                         {
-                                            if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
+                                            Assembly assembly = Assembly.Load(assemblyData);
+                                            DataStructure.LoadedAssemblyList.Add(assembly);
+                                        }
+                                        Type pluginType = typeof(IPlugin);
+                                        ICollection<Type> pluginTypes = new List<Type>();
+                                        foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
+                                        {
+                                            Type[] types = assembly.GetTypes();
+                                            foreach (Type type in types)
                                             {
-                                                pluginTypes.Add(type);
+                                                if (!type.IsInterface || !type.IsAbstract)
+                                                {
+                                                    if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
+                                                    {
+                                                        pluginTypes.Add(type);
+                                                    }
+                                                }
                                             }
                                         }
-                                    }
-                                }
-                                foreach (Type type in pluginTypes)
-                                {
-                                    IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
-                                    var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
-                                    DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
-                                    plugin.InstantiateClient();
+                                        foreach (Type type in pluginTypes)
+                                        {
+                                            IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                                            var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
+                                            DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
+                                            plugin.InstantiateClient();
+                                        }
+                                        break;
+                                    default:
+                                        break;
                                 }
                                 break;
                             case PackageType.PluginCommand:
+                                returnPackage = PluginFactory.HandlePluginMethods(inPackage, BaseInfoType.Client);
                                 break;
                             case PackageType.Status:
                                 break;
                             case PackageType.NoResponse:
                                 break;
-                            case PackageType.ClientResponse:
-                                break;
-                            case PackageType.ServerResponse:
+                            case PackageType.Response:
                                 break;
                             default:
-                                returnPackage = inPackage;
                                 break;
                         }
                         return returnPackage;
                     }
                     public static Package HandleMasterPackages(Package inPackage)
                     {
-                        Package returnPackage = inPackage;
+                        Package returnPackage = new Package(null, null, PackageType.Response, new BaseInfo(BaseInfoType.Server), inPackage.To);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
+                                returnPackage = inPackage;
                                 break;
                             case PackageType.Plugin:
-                                DataStructure.AssemblyList = (List<byte[]>)inPackage.Content;
-                                Console.WriteLine("LOADED ASSEMBLIES");
-                                foreach (var assemblyData in DataStructure.AssemblyList)
+                                switch (inPackage.Command)
                                 {
-                                    Assembly assembly = Assembly.Load(assemblyData);
-                                    DataStructure.LoadedAssemblyList.Add(assembly);
-                                }
-                                Type pluginType = typeof(IPlugin);
-                                ICollection<Type> pluginTypes = new List<Type>();
-                                foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
-                                {
-                                    Type[] types = assembly.GetTypes();
-                                    foreach (Type type in types)
-                                    {
-                                        if (!type.IsInterface || !type.IsAbstract)
+                                    case "LOAD_PLUGINS":
+                                        DataStructure.AssemblyList = (List<byte[]>)inPackage.Content;
+                                        Console.WriteLine("LOADED ASSEMBLIES");
+                                        foreach (var assemblyData in DataStructure.AssemblyList)
                                         {
-                                            if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
+                                            Assembly assembly = Assembly.Load(assemblyData);
+                                            DataStructure.LoadedAssemblyList.Add(assembly);
+                                        }
+                                        Type pluginType = typeof(IPlugin);
+                                        ICollection<Type> pluginTypes = new List<Type>();
+                                        foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
+                                        {
+                                            Type[] types = assembly.GetTypes();
+                                            foreach (Type type in types)
                                             {
-                                                pluginTypes.Add(type);
+                                                if (!type.IsInterface || !type.IsAbstract)
+                                                {
+                                                    if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
+                                                    {
+                                                        pluginTypes.Add(type);
+                                                    }
+                                                }
                                             }
                                         }
-                                    }
-                                }
-                                foreach (Type type in pluginTypes)
-                                {
-                                    IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
-                                    var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
-                                    MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                                    DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
-                                    plugin.InstantiateMaster();
-                                    DataStructure.PluginMethodDictionary.Add(pluginMetadata,)
+                                        foreach (Type type in pluginTypes)
+                                        {
+                                            IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                                            var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
+                                            MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                                            DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
+                                            DataStructure.PluginMethodDictionary.Add(pluginMetadata[0], methodInfo);
+                                        }
+                                        break;
+                                    default:
+                                        break;
                                 }
                                 break;
                             case PackageType.PluginCommand:
+                                returnPackage = PluginFactory.HandlePluginMethods(inPackage, BaseInfoType.Master);
                                 break;
                             case PackageType.Status:
                                 break;
                             case PackageType.NoResponse:
                                 break;
-                            case PackageType.ClientResponse:
-                                break;
-                            case PackageType.ServerResponse:
+                            case PackageType.Response:
                                 break;
                             default:
                                 break;
                         }
-                        return inPackage;
+                        return returnPackage;
                     }
                 }
                 [Serializable]
@@ -269,17 +307,20 @@ namespace Platinium
                 {
                     public BaseInfo To { get; private set; }
                     public BaseInfo From { get; private set; }
+                    public string Command { get; private set; }
                     public object Content { get; private set; }
                     public PackageType PackageType { get; private set; }
-                    public Package(object obj, PackageType packagetype, BaseInfo to, BaseInfo from)
+                    public Package(string command, object obj, PackageType packagetype, BaseInfo to, BaseInfo from)
                     {
+                        Command = command;
                         To = to;
                         PackageType = packagetype;
                         From = from;
                         Content = obj;
                     }
-                    public Package(object obj, PackageType packagetype, BaseInfo from)
+                    public Package(string command, object obj, PackageType packagetype, BaseInfo from)
                     {
+                        Command = command;
                         From = from;
                         Content = obj;
                         PackageType = packagetype;

@@ -43,14 +43,19 @@ namespace Platinium
                     networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     networkStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    Console.WriteLine("GET PACKAGE\nType - {0}\nValue - {1}\nFrom - {2}\nTo - {3}", package.PackageType.ToString(), package.Content.ToString(), package.From.UID, package.To.UID);
+                    if (package.From != null)
+                    {
+                        Console.WriteLine("GET PACKAGE\nType - {0}\nValue - {1}\nFrom - {2}\nTo - {3}", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.UID.EmptyIfNull());
+                    }
+                    else
+                    {
+                        Console.WriteLine("GET PACKAGE\nType - {0}", package.PackageType);
+                    }
                     Communicate(package);
                 }
             }
             public static void Communicate(Package package)
             {
-                Console.WriteLine("COMMUNICATE");
-                Console.WriteLine("TO {0}", package.To.Type);
                 if (package.To.Type == BaseInfoType.Client)
                 {
                     foreach (var item in DataStructure.ClientList)
@@ -60,10 +65,12 @@ namespace Platinium
                             TcpClient communicationSocket = item.Connector.ClientSocket;
                             NetworkStream communicationStream = communicationSocket.GetStream();
                             Package outPackage = PackageFactory.HandleServerPackages(package);
-                            TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                            communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                            communicationStream.Flush();
-                            Console.WriteLine("SENT");
+                            if (package.PackageType != PackageType.Response)
+                            {
+                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
+                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                                communicationStream.Flush();
+                            }
                         }
                     }
                 }
@@ -76,44 +83,53 @@ namespace Platinium
                             TcpClient communicationSocket = item.Connector.ClientSocket;
                             NetworkStream communicationStream = communicationSocket.GetStream();
                             Package outPackage = PackageFactory.HandleServerPackages(package);
-                            TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                            communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                            communicationStream.Flush();
-                            Console.WriteLine("SENT");
+                            if (package.PackageType != PackageType.Response)
+                            {
+                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
+                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                                communicationStream.Flush();
+                            }
                         }
                     }
                 }
                 else if (package.To.Type == BaseInfoType.Server)
                 {
-                    if (package.From.Type == BaseInfoType.Master)
+                    if (package.From != null)
                     {
-                        foreach (var item in DataStructure.MasterList)
+                        if (package.From.Type == BaseInfoType.Master)
                         {
-                            if (package.From.UID == item.UID)
+                            foreach (var item in DataStructure.MasterList)
                             {
-                                TcpClient communicationSocket = item.Connector.ClientSocket;
-                                NetworkStream communicationStream = communicationSocket.GetStream();
-                                Package outPackage = PackageFactory.HandleServerPackages(package);
-                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                communicationStream.Flush();
-                                Console.WriteLine("SENT");
+                                if (package.From.UID == item.UID)
+                                {
+                                    TcpClient communicationSocket = item.Connector.ClientSocket;
+                                    NetworkStream communicationStream = communicationSocket.GetStream();
+                                    Package outPackage = PackageFactory.HandleServerPackages(package);
+                                    if (package.PackageType != PackageType.Response)
+                                    {
+                                        TransportPackage TransportPackage = Serializer.Serialize(outPackage);
+                                        communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                                        communicationStream.Flush();
+                                    }
+                                }
                             }
                         }
-                    }
-                    else if (package.From.Type == BaseInfoType.Client)
-                    {
-                        foreach (var item in DataStructure.ClientList)
+                        else if (package.From.Type == BaseInfoType.Client)
                         {
-                            if (package.From.UID == item.UID)
+                            foreach (var item in DataStructure.ClientList)
                             {
-                                TcpClient communicationSocket = item.Connector.ClientSocket;
-                                NetworkStream communicationStream = communicationSocket.GetStream();
-                                Package outPackage = PackageFactory.HandleServerPackages(package);
-                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                communicationStream.Flush();
-                                Console.WriteLine("SENT");
+                                if (package.From.UID == item.UID)
+                                {
+                                    TcpClient communicationSocket = item.Connector.ClientSocket;
+                                    NetworkStream communicationStream = communicationSocket.GetStream();
+                                    Package outPackage = PackageFactory.HandleServerPackages(package);
+                                    if (package.PackageType != PackageType.Response)
+                                    {
+                                        TransportPackage TransportPackage = Serializer.Serialize(outPackage);
+                                        communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                                        communicationStream.Flush();
+                                    }
+                                }
                             }
                         }
                     }
@@ -215,8 +231,7 @@ namespace Platinium
                     IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
                     var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                     DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
-                    plugin.InstantiateServer();
-                    Console.WriteLine("* {0} INSTANTIATED", type.ToString());
+                    Console.WriteLine("* {0} LOADED", type.ToString());
                 }
                 Console.WriteLine("*************** FINNISHED LOADING PLUGINS ***************");
             }

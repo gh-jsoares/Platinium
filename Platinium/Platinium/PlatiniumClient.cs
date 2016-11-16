@@ -1,4 +1,5 @@
 ﻿using Platinium.Shared.Content;
+using Platinium.Shared.Core;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Info;
@@ -24,7 +25,7 @@ namespace Platinium
             {
                 clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = clientSocket.GetStream();
-                Write(new Package(ClientInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), ClientInfo));
+                Write(new Package(null, ClientInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), ClientInfo));
                 Thread GetThread = new Thread(Get);
                 GetThread.Start();
                 LoadPlugins();
@@ -32,7 +33,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Write(new Package("LOAD_PLUGINS", PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo));
             }
             private void Write(Package package)
             {
@@ -50,9 +51,10 @@ namespace Platinium
                     serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    package = PackageFactory.HandleClientPackages(package);
-                    Console.WriteLine(package.Content.ToString());
+                    Console.WriteLine(package.Content.EmptyIfNull());
                     Console.WriteLine(package.PackageType.ToString());
+                    package = PackageFactory.HandleClientPackages(package);
+                    Write(package);
                     Console.WriteLine("GET");
                 }
             }
