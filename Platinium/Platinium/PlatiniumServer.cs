@@ -162,7 +162,7 @@ namespace Platinium
                     NetworkStream networkStream = Socket.GetStream();
                     networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    BaseInfo Info = (BaseInfo)package.Content;
+                    ClientInfo Info = (ClientInfo)package.Content;
                     Info.Connector = new Connector();
                     if (Info.Type == BaseInfoType.Client)
                     {

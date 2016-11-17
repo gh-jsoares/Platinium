@@ -18,14 +18,14 @@ namespace Platinium
     {
         public class PlatiniumMaster
         {
-            private BaseInfo MasterInfo = BuildMasterInfo();
+            private ClientInfo MasterInfo = BuildMasterInfo();
             private TcpClient masterSocket = new TcpClient();
             private NetworkStream serverStream = default(NetworkStream);
             public PlatiniumMaster()
             {
                 masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = masterSocket.GetStream();
-                Package package = new Package(null, MasterInfo, PackageType.Base, new BaseInfo(BaseInfoType.Server), MasterInfo);
+                Package package = new Package(null, MasterInfo, PackageType.Base, new ClientInfo(BaseInfoType.Server), MasterInfo);
                 TransportPackage TransportPackage = Serializer.Serialize(package);
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
@@ -34,9 +34,9 @@ namespace Platinium
                 //Thread WriteThread = new Thread(Write);
                 //WriteThread.Start();
                 Console.ReadLine();
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, new BaseInfo(BaseInfoType.Server), MasterInfo));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, new ClientInfo(BaseInfoType.Server), MasterInfo));
                 Console.ReadLine();
-                Write(new Package("TEST|Action", null, PackageType.PluginCommand, new BaseInfo("2"), MasterInfo));
+                Write(new Package("TEST|Action", null, PackageType.PluginCommand, new ClientInfo("2"), MasterInfo));
                 Console.ReadLine();
             }
             private void Write(Package package)
@@ -60,13 +60,13 @@ namespace Platinium
                     Console.WriteLine("GET");
                 }
             }
-            private static BaseInfo BuildMasterInfo()
+            private static ClientInfo BuildMasterInfo()
             {
-                BaseInfo ci = new BaseInfo
+                ClientInfo ci = new ClientInfo
                 {
                     IP = "127.0.0.1",
                     MACAddress = "MAChhh",
-                    Name = "TESTMaster",
+                    UserName = "TESTMaster",
                     UID = "1",
                     Type = BaseInfoType.Master
                 };
