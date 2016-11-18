@@ -107,6 +107,8 @@ namespace Platinium
             public class Metadata : Attribute
             {
                 public string Name { get; set; }
+                public string Version { get; set; }
+                public string Description { get; set; }
             }
             public partial class PluginFactory
             {
@@ -417,6 +419,7 @@ namespace Platinium
         }
         namespace Info
         {
+            [Serializable]
             public class LocationInfo
             {
                 public string City { get; set; }

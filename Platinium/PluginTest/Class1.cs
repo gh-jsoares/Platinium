@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 
-[Metadata(Name = "TEST")]
+[Metadata(Name = "TEST", Version = "1", Description = "Just a Test Plugin")]
 public class Plugin : IPlugin
 {
     public string TEST = "OLA";
