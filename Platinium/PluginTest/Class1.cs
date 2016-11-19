@@ -19,7 +19,9 @@ public class Plugin : IPlugin
 {
     public string TEST = "OLA";
     public IPluginClientController ClientController { get; set; }
+    public IPluginMasterController MasterController { get; set; }
     public UserControlModule PluginInterfaceControl { get; set; }
+
     public Plugin()
     {
 
@@ -32,18 +34,26 @@ public class Plugin : IPlugin
     {
         ClientController = new PluginClientSide();
     }
+    public void InstantiateMaster()
+    {
+        MasterController = new PluginMasterSide();
+    }
 }
 public class PluginClientSide : IPluginClientController
 {
     public string TESTEST = "OLAOLA";
-    public PluginClientSide()
-    {
-
-    }
     public Package Action(Package inPackage)
     {
         Package returnPackage = inPackage;
-        returnPackage = new Package("TEST|Action", "PLUGIN ACTION WORKING", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.From, inPackage.To);
+        returnPackage = new Package("TEST|Action", "PLUGIN ACTION WORKING", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From);
+        return returnPackage;
+    }
+}
+public class PluginMasterSide : IPluginMasterController
+{
+    public Package Action(Package inPackage)
+    {
+        Package returnPackage = new Package("TEST|Action", "PLUGIN ACTION WORKING (PARSED AT MASTER)", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From);
         return returnPackage;
     }
 }

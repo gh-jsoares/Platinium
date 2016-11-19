@@ -97,10 +97,16 @@ namespace Platinium
             {
                 void Action();
                 void InstantiateClient();
+                void InstantiateMaster();
                 IPluginClientController ClientController { get; set; }
+                IPluginMasterController MasterController { get; set; }
                 UserControlModule PluginInterfaceControl { get; set; }
             }
             public interface IPluginClientController
+            {
+                Package Action(Package inPackage);
+            }
+            public interface IPluginMasterController
             {
                 Package Action(Package inPackage);
             }
@@ -119,22 +125,45 @@ namespace Platinium
                     string plugin_name = commands[0];
                     string plugin_command = commands[1];
                     object[] command_parameters = { inPackage };
-                    Type type = DataStructure.PluginDictionary[new Metadata { Name = plugin_name }].ClientController.GetType();
+                    Type type = null;
+                    if (baseInfoType == BaseInfoType.Client)
+                    {
+                        type = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault().ClientController.GetType();
+                    }
+                    else if (baseInfoType == BaseInfoType.Master)
+                    {
+                        type = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault().MasterController.GetType();
+                    }
+
                     if (type != null)
                     {
                         MethodInfo methodInfo = type.GetMethod(plugin_command);
                         if (methodInfo != null)
                         {
                             ParameterInfo[] parameters = methodInfo.GetParameters();
-                            IPlugin pluginInstance = DataStructure.PluginDictionary[new Metadata { Name = plugin_name }];
+                            IPlugin pluginInstance = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault();
 
                             if (parameters.Length == 0)
                             {
-                                returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, null);
+                                if (baseInfoType == BaseInfoType.Client)
+                                {
+                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, null);
+                                }
+                                else if (baseInfoType == BaseInfoType.Master)
+                                {
+                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, null);
+                                }
                             }
                             else
                             {
-                                returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, command_parameters.ToArray());
+                                if (baseInfoType == BaseInfoType.Client)
+                                {
+                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, command_parameters.ToArray());
+                                }
+                                else if (baseInfoType == BaseInfoType.Master)
+                                {
+                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, command_parameters.ToArray());
+                                }
                             }
                         }
                     }
@@ -150,7 +179,7 @@ namespace Platinium
                 {
                     public static Package HandleServerPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, inPackage.From, inPackage.To);
+                        Package returnPackage = new Package(null, null, PackageType.Response, inPackage.To, inPackage.From);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -160,7 +189,7 @@ namespace Platinium
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
-                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyList, PackageType.Plugin, inPackage.From, inPackage.To);
+                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyRaw, PackageType.Plugin, inPackage.To, inPackage.From);
                                         break;
                                     default:
                                         break;
@@ -182,7 +211,7 @@ namespace Platinium
                     }
                     public static Package HandleClientPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, new ClientInfo(BaseInfoType.Server), inPackage.To);
+                        Package returnPackage = new Package(null, null, PackageType.Response, inPackage.To, new ClientInfo(BaseInfoType.Server));
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -192,9 +221,9 @@ namespace Platinium
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
-                                        DataStructure.AssemblyList = (List<byte[]>)inPackage.Content;
+                                        DataStructure.AssemblyRaw = (List<byte[]>)inPackage.Content;
                                         Console.WriteLine("LOADED ASSEMBLIES");
-                                        foreach (var assemblyData in DataStructure.AssemblyList)
+                                        foreach (var assemblyData in DataStructure.AssemblyRaw)
                                         {
                                             Assembly assembly = Assembly.Load(assemblyData);
                                             DataStructure.LoadedAssemblyList.Add(assembly);
@@ -243,7 +272,7 @@ namespace Platinium
                     }
                     public static Package HandleMasterPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, new ClientInfo(BaseInfoType.Server), inPackage.To);
+                        Package returnPackage = inPackage;
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -253,9 +282,9 @@ namespace Platinium
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
-                                        DataStructure.AssemblyList = (List<byte[]>)inPackage.Content;
+                                        DataStructure.AssemblyRaw = (List<byte[]>)inPackage.Content;
                                         Console.WriteLine("LOADED ASSEMBLIES");
-                                        foreach (var assemblyData in DataStructure.AssemblyList)
+                                        foreach (var assemblyData in DataStructure.AssemblyRaw)
                                         {
                                             Assembly assembly = Assembly.Load(assemblyData);
                                             DataStructure.LoadedAssemblyList.Add(assembly);
@@ -283,6 +312,7 @@ namespace Platinium
                                             MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                                             DataStructure.PluginMethodDictionary.Add(pluginMetadata[0], methodInfo);
+                                            plugin.InstantiateMaster();
                                         }
                                         break;
                                     default:
@@ -312,7 +342,7 @@ namespace Platinium
                     public string Command { get; private set; }
                     public object Content { get; private set; }
                     public PackageType PackageType { get; private set; }
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo to, ClientInfo from)
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to)
                     {
                         Command = command;
                         To = to;
@@ -412,7 +442,7 @@ namespace Platinium
                     public static List<ClientInfo> ClientList = new List<ClientInfo>();
                     public static Dictionary<Metadata, IPlugin> PluginDictionary = new Dictionary<Metadata, IPlugin>();
                     public static Dictionary<Metadata, MethodInfo[]> PluginMethodDictionary = new Dictionary<Metadata, MethodInfo[]>();
-                    public static List<byte[]> AssemblyList = new List<byte[]>();
+                    public static List<byte[]> AssemblyRaw = new List<byte[]>();
                     public static List<Assembly> LoadedAssemblyList = new List<Assembly>();
                 }
             }

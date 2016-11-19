@@ -23,9 +23,10 @@ namespace Platinium
             private NetworkStream serverStream = default(NetworkStream);
             public PlatiniumMaster()
             {
+                Console.Title = "Platinium Beta Master";
                 masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = masterSocket.GetStream();
-                Package package = new Package(null, MasterInfo, PackageType.Base, new ClientInfo(BaseInfoType.Server), MasterInfo);
+                Package package = new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server));
                 TransportPackage TransportPackage = Serializer.Serialize(package);
                 serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
                 serverStream.Flush();
@@ -34,9 +35,9 @@ namespace Platinium
                 //Thread WriteThread = new Thread(Write);
                 //WriteThread.Start();
                 Console.ReadLine();
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, new ClientInfo(BaseInfoType.Server), MasterInfo));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, MasterInfo, new ClientInfo(BaseInfoType.Server)));
                 Console.ReadLine();
-                Write(new Package("TEST|Action", null, PackageType.PluginCommand, new ClientInfo("2"), MasterInfo));
+                Write(new Package("TEST|Action", null, PackageType.PluginCommand, MasterInfo, new ClientInfo("2")));
                 Console.ReadLine();
             }
             private void Write(Package package)
@@ -54,9 +55,9 @@ namespace Platinium
                     TransportPackage TransportPackage = new TransportPackage();
                     serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
+                    package = PackageFactory.HandleMasterPackages(package);
                     Console.WriteLine(package.Content.EmptyIfNull());
                     Console.WriteLine(package.PackageType.ToString());
-                    package = PackageFactory.HandleMasterPackages(package);
                     Console.WriteLine("GET");
                 }
             }

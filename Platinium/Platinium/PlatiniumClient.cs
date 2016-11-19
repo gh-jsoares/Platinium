@@ -26,9 +26,10 @@ namespace Platinium
             private NetworkStream serverStream = default(NetworkStream);
             public PlatiniumClient()
             {
+                Console.Title = "Platinium Beta Client";
                 clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = clientSocket.GetStream();
-                Write(new Package(null, ClientInfo, PackageType.Base, new ClientInfo(BaseInfoType.Server), ClientInfo));
+                Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server)));
                 Thread GetThread = new Thread(Get);
                 GetThread.Start();
                 LoadPlugins();
@@ -36,7 +37,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, new ClientInfo(BaseInfoType.Server), ClientInfo));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, ClientInfo, new ClientInfo(BaseInfoType.Server)));
             }
             private void Write(Package package)
             {
