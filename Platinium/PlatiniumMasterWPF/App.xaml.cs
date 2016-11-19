@@ -16,7 +16,7 @@ namespace PlatiniumMasterWPF
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             LoginWindow lw = new LoginWindow();
-            lw.Show();
+            lw.ShowDialog();
         }
     }
 }

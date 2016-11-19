@@ -70,21 +70,19 @@ namespace Platinium
                 NoResponse,
                 Response
             }
-            public interface IContent
-            {
-                object Data { get; set; }
-            }
             [Serializable]
-            public class Command : IContent
+            public class Command
             {
-                public object Data { get; set; }
+                public string Type { get; set; }
+                public string CommandContent { get; set; }
                 public Command()
                 {
 
                 }
-                public Command(object data)
+                public Command(string type, string command)
                 {
-                    Data = data;
+                    Type = type;
+                    CommandContent = command;
                 }
             }
         }

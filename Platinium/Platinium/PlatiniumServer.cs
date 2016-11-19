@@ -145,6 +145,7 @@ namespace Platinium
             public IPEndPoint HearthBeatIPEndPoint { get; private set; }
             public PlatiniumServer()
             {
+                Console.Title = "Platinium Beta Server";
                 LoadPlugins();
                 IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
                 HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
@@ -201,10 +202,10 @@ namespace Platinium
                         buffer = new byte[fs.Length];
                         fs.Read(buffer, 0, (int)fs.Length);
                     }
-                    DataStructure.AssemblyList.Add(buffer);
+                    DataStructure.AssemblyRaw.Add(buffer);
                 }
                 Console.WriteLine("* PLUGINS FOUND: {0}", dllFiles.Length);
-                foreach (var assemblyData in DataStructure.AssemblyList)
+                foreach (var assemblyData in DataStructure.AssemblyRaw)
                 {
                     Assembly assembly = Assembly.Load(assemblyData);
                     DataStructure.LoadedAssemblyList.Add(assembly);

@@ -25,7 +25,9 @@ namespace PlatiniumMasterWPF
         }
         private void ButtonSendKey_Click(object sender, RoutedEventArgs e)
         {
-
+            this.Hide();
+            MainWindow mw = new MainWindow();
+            mw.Show();
         }
     }
 }

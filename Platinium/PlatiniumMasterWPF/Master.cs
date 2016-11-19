@@ -22,7 +22,7 @@ namespace PlatiniumMasterWPF
         }
         private void Initialize()
         {
-            type = assembly.GetType("Platinium.Entities.Master");
+            type = assembly.GetType("Platinium.Entities.PlatiniumMaster");
             object server = Activator.CreateInstance(type);
         }
         private void InitializeEnvironment()
