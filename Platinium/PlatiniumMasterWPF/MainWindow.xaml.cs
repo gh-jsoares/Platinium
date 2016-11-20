@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,6 +24,12 @@ namespace PlatiniumMasterWPF
         public MainWindow()
         {
             InitializeComponent();
+            InitializeMaster();
+        }
+        public void InitializeMaster()
+        {
+            Thread.Sleep(5000);
+            MasterController master = new MasterController();
         }
     }
 }

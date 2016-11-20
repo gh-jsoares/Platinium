@@ -23,7 +23,7 @@ namespace Platinium
             private NetworkStream serverStream = default(NetworkStream);
             public PlatiniumMaster()
             {
-                Console.Title = "Platinium Beta Master";
+                //Console.Title = "Platinium Beta Master";
                 masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                 serverStream = masterSocket.GetStream();
                 Package package = new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server));

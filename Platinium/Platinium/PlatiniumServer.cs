@@ -45,11 +45,11 @@ namespace Platinium
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     if (package.From != null)
                     {
-                        Console.WriteLine("GET PACKAGE\nType - {0}\nValue - {1}\nFrom - {2}\nTo - {3}", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.UID.EmptyIfNull());
+                        Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From - {2}\n* To - {3}*************** END GET ***************", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.UID.EmptyIfNull());
                     }
                     else
                     {
-                        Console.WriteLine("GET PACKAGE\nType - {0}", package.PackageType);
+                        Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}", package.PackageType);
                     }
                     Communicate(package);
                 }
