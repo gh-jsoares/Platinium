@@ -15,6 +15,7 @@ namespace PlatiniumMasterWPF
         private byte[] raw_assembly;
         private Assembly assembly;
         private Type type;
+        private object instance;
         public MasterController()
         {
             InitializeEnvironment();
@@ -23,7 +24,7 @@ namespace PlatiniumMasterWPF
         private void Initialize()
         {
             type = assembly.GetType("Platinium.Entities.PlatiniumMaster");
-            object server = Activator.CreateInstance(type);
+            instance = Activator.CreateInstance(type);
         }
         private void InitializeEnvironment()
         {
@@ -40,6 +41,11 @@ namespace PlatiniumMasterWPF
         private void StaticEnvironmentLoading()
         {
             assembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().ToString()), "Platinium.dll"));
+        }
+        public void GetPlugins()
+        {
+            MethodInfo methodInfo = type.GetMethod("GetPlugins");
+            methodInfo.Invoke(instance, null);
         }
     }
     class Crypt

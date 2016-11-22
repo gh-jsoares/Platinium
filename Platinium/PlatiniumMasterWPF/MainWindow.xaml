@@ -7,10 +7,10 @@
             xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="PlatiniumMasterWPF.MainWindow"
         mc:Ignorable="d"
-        Title="Platinium" GlowBrush="{DynamicResource AccentColorBrush}" Height="316.374" Width="494.334" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+        Title="Platinium" GlowBrush="{DynamicResource AccentColorBrush}" Height="474" Width="878" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
-        <ListBox x:Name="listboxPlugins" Grid.Row="1" BorderThickness="0" 
-     ItemsSource="{Binding}">
+        <ListBox x:Name="listboxPlugins" BorderThickness="0" 
+     ItemsSource="{Binding}" Margin="0,0,644,0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>

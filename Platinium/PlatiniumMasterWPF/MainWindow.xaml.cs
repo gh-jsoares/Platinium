@@ -22,6 +22,7 @@ namespace PlatiniumMasterWPF
     /// </summary>
     public partial class MainWindow
     {
+        private static MasterController master;
         public MainWindow()
         {
             InitializeComponent();
@@ -30,8 +31,11 @@ namespace PlatiniumMasterWPF
         public void InitializeMaster()
         {
             Thread.Sleep(5000);
-            MasterController master = new MasterController();
-            Thread.Sleep(5000);
+            master = new MasterController();
+        }
+        private void GetPlugins()
+        {
+            master.GetPlugins();
             listboxPlugins.ItemsSource = DataStructure.PluginDictionary;
         }
     }
