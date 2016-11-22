@@ -20,7 +20,7 @@ namespace PlatiniumMasterWPF
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         public MainWindow()
         {
@@ -31,7 +31,8 @@ namespace PlatiniumMasterWPF
         {
             Thread.Sleep(5000);
             MasterController master = new MasterController();
-            listBox.ItemsSource = DataStructure.PluginDictionary;
+            Thread.Sleep(5000);
+            listboxPlugins.ItemsSource = DataStructure.PluginDictionary;
         }
     }
 }

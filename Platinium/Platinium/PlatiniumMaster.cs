@@ -32,6 +32,7 @@ namespace Platinium
                 serverStream.Flush();
                 Thread GetThread = new Thread(Get);
                 GetThread.Start();
+                GetPlugins();
                 //Thread WriteThread = new Thread(Write);
                 //WriteThread.Start();
                 //Write(new Package("TEST|Action", null, PackageType.PluginCommand, MasterInfo, new ClientInfo("2")));
