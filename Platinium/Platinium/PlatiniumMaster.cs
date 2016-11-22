@@ -34,11 +34,11 @@ namespace Platinium
                 GetThread.Start();
                 //Thread WriteThread = new Thread(Write);
                 //WriteThread.Start();
-                Console.ReadLine();
+                //Write(new Package("TEST|Action", null, PackageType.PluginCommand, MasterInfo, new ClientInfo("2")));
+            }
+            public void GetPlugins()
+            {
                 Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, MasterInfo, new ClientInfo(BaseInfoType.Server)));
-                Console.ReadLine();
-                Write(new Package("TEST|Action", null, PackageType.PluginCommand, MasterInfo, new ClientInfo("2")));
-                Console.ReadLine();
             }
             private void Write(Package package)
             {

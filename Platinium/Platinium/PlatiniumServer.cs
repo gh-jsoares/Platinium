@@ -167,15 +167,19 @@ namespace Platinium
                     Info.Connector = new Connector();
                     if (Info.Type == BaseInfoType.Client)
                     {
+                        Console.WriteLine("*************** CLIENT CONNECTED ***************");
                         if (!DataStructure.ClientList.Contains(Info))
                         {
+                            Console.WriteLine("*************** AUTHENTICATED ***************");
                             DataStructure.ClientList.Add(Info);
                         }
                     }
                     else if (Info.Type == BaseInfoType.Master)
                     {
+                        Console.WriteLine("*************** MASTER CONNECTED ***************");
                         if (!DataStructure.MasterList.Contains(Info))
                         {
+                            Console.WriteLine("*************** AUTHENTICATED ***************");
                             DataStructure.MasterList.Add(Info);
                         }
                     }
@@ -184,10 +188,11 @@ namespace Platinium
                         Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
                         foreach (var item in ddata)
                         {
-                            Console.WriteLine("{0} - {1}", item.Key, item.Value);
+                            Console.WriteLine("* {0} - {1}", item.Key, item.Value);
                         }
                         Info.Connector.StartConnection(Socket);
                     }
+                    Console.WriteLine("*******************************************");
                 }
             }
             private void LoadPlugins()

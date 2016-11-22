@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Platinium.Shared.Data.Structures;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,7 @@ namespace PlatiniumMasterWPF
         {
             Thread.Sleep(5000);
             MasterController master = new MasterController();
+            listBox.ItemsSource = DataStructure.PluginDictionary;
         }
     }
 }
