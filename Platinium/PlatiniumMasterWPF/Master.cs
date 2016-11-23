@@ -47,6 +47,11 @@ namespace PlatiniumMasterWPF
             MethodInfo methodInfo = type.GetMethod("GetPlugins");
             methodInfo.Invoke(instance, null);
         }
+        public void GetClientList()
+        {
+            MethodInfo methodInfo = type.GetMethod("GetClients");
+            methodInfo.Invoke(instance, null);
+        }
     }
     class Crypt
     {

@@ -38,5 +38,20 @@ namespace PlatiniumMasterWPF
             master.GetPlugins();
             listboxPlugins.ItemsSource = DataStructure.PluginDictionary;
         }
+        private void GetClients()
+        {
+            master.GetClientList();
+            datagridClients.ItemsSource = DataStructure.ClientList;
+        }
+
+        private void buttonPlugin_Click(object sender, RoutedEventArgs e)
+        {
+            GetPlugins();
+        }
+
+        private void buttonClientList_Click(object sender, RoutedEventArgs e)
+        {
+            GetClients();
+        }
     }
 }

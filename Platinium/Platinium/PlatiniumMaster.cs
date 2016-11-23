@@ -38,7 +38,11 @@ namespace Platinium
             }
             public void GetPlugins()
             {
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, MasterInfo, new ClientInfo(BaseInfoType.Server)));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server)));
+            }
+            public void GetClients()
+            {
+                Write(new Package("CLIENT_LIST", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server)));
             }
             private void Write(Package package)
             {

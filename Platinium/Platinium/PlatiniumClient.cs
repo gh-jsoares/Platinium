@@ -37,7 +37,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Plugin, ClientInfo, new ClientInfo(BaseInfoType.Server)));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Data, ClientInfo, new ClientInfo(BaseInfoType.Server)));
             }
             private void Write(Package package)
             {

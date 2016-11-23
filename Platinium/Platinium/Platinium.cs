@@ -64,7 +64,7 @@ namespace Platinium
             public enum PackageType
             {
                 Base,
-                Plugin,
+                Data,
                 PluginCommand,
                 Status,
                 NoResponse,
@@ -183,11 +183,14 @@ namespace Platinium
                             case PackageType.Base:
                                 returnPackage = inPackage;
                                 break;
-                            case PackageType.Plugin:
+                            case PackageType.Data:
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
-                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyRaw, PackageType.Plugin, inPackage.To, inPackage.From);
+                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyRaw, PackageType.Data, inPackage.To, inPackage.From);
+                                        break;
+                                    case "CLIENT_LIST":
+                                        returnPackage = new Package("CLIENT_LIST", DataStructure.ClientList, PackageType.Data, inPackage.To, inPackage.From);
                                         break;
                                     default:
                                         break;
@@ -215,7 +218,7 @@ namespace Platinium
                             case PackageType.Base:
                                 returnPackage = inPackage;
                                 break;
-                            case PackageType.Plugin:
+                            case PackageType.Data:
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
@@ -246,6 +249,7 @@ namespace Platinium
                                         {
                                             IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
+                                            DataStructure.PluginDictionary.Clear();
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                                             plugin.InstantiateClient();
                                         }
@@ -276,7 +280,7 @@ namespace Platinium
                             case PackageType.Base:
                                 returnPackage = inPackage;
                                 break;
-                            case PackageType.Plugin:
+                            case PackageType.Data:
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
@@ -308,10 +312,15 @@ namespace Platinium
                                             IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                                             MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                                            DataStructure.PluginDictionary.Clear();
+                                            DataStructure.PluginMethodDictionary.Clear();
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                                             DataStructure.PluginMethodDictionary.Add(pluginMetadata[0], methodInfo);
                                             plugin.InstantiateMaster();
                                         }
+                                        break;
+                                    case "CLIENT_LIST":
+                                        DataStructure.ClientList = (List<ClientInfo>)inPackage.Content;
                                         break;
                                     default:
                                         break;
@@ -480,7 +489,9 @@ namespace Platinium
                 public List<Metadata> Plugins { get; set; }
 
                 public BaseInfoType Type { get; set; }
-                public Connector Connector { get; set; }
+                [NonSerialized]
+                private Connector _connector;
+                public Connector Connector { get { return _connector; } set { _connector = value; } }
                 public ClientInfo()
                 {
 

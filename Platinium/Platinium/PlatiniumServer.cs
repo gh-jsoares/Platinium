@@ -150,6 +150,8 @@ namespace Platinium
                 IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
                 HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
                 Thread hearthBeatTask = new Thread(HearthBeat);
+                Thread clientConnection = new Thread(CheckClientConnection);
+                clientConnection.Start();
                 Listen();
             }
             private void Listen()
@@ -249,6 +251,28 @@ namespace Platinium
                 {
                     TcpClient hearthBeatClient = HearthBeatServerSocket.AcceptTcpClient();
                     hearthBeatClient.Close();
+                }
+            }
+            private void CheckClientConnection()
+            {
+                while (true)
+                {
+                    try
+                    {
+                        foreach (var client in DataStructure.ClientList)
+                        {
+                            TcpClient testTcp = client.Connector.ClientSocket;
+                            if (!testTcp.Connected)
+                            {
+                                DataStructure.ClientList.Remove(client);
+                                break;
+                            }
+                        }
+
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
         }
