@@ -1,15 +1,16 @@
-﻿using Platinium.Core;
-using Platinium.Shared.Content;
+﻿using Platinium.Shared.Content;
 using Platinium.Shared.Core;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Info;
 using System;
+using System.Management;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
@@ -68,36 +69,16 @@ namespace Platinium
                 {
                     IP = CFunctions.GetPublicIP(),
                     MACAddress = CFunctions.GetMacAddress(),
-                    UserName = "TESTClient",
-                    UID = "2",
+                    UserName = CFunctions.GetCurrentLoggedUser(),
+                    ComputerName = CFunctions.GetComputerName(),
+                    UID = FingerPrint.Value(),
                     Type = BaseInfoType.Client,
                     IsAdministrator = CFunctions.IsAdministrator(),
-
-
+                    Language = CFunctions.GetCurrentCulture(),
+                    AppNetVersion = CFunctions.GetAppNetVersion(),
+                    OSName = CFunctions.GetOSName()
                 };
                 return ci;
-            }
-        }
-    }
-    namespace Core
-    {
-        public class CFunctions
-        {
-            public static bool IsAdministrator()
-            {
-                WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                WindowsPrincipal principal = new WindowsPrincipal(identity);
-                return principal.IsInRole(WindowsBuiltInRole.Administrator);
-            }
-            public static string GetPublicIP()
-            {
-                return new WebClient().DownloadString(@"http://icanhazip.com").Trim();
-            }
-            public static string GetMacAddress()
-            {
-                return (from nic in NetworkInterface.GetAllNetworkInterfaces()
-                        where nic.OperationalStatus == OperationalStatus.Up
-                        select nic.GetPhysicalAddress().ToString()).FirstOrDefault();
             }
         }
     }

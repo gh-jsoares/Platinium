@@ -20,6 +20,12 @@ using Platinium.Shared.Content;
 using Platinium.Connection;
 using System.Reflection;
 using System.Windows.Forms;
+using System.Management;
+using System.Security.Cryptography;
+using System.Security.Principal;
+using System.Net.NetworkInformation;
+using System.DirectoryServices.AccountManagement;
+using System.Globalization;
 
 namespace Platinium
 {
@@ -56,6 +62,206 @@ namespace Platinium
                         return "NULL";
                     }
                     return value.ToString();
+                }
+            }
+            /// <summary>
+            /// Generates a 16 byte Unique Identification code of a computer
+            /// Example: 4876-8DB5-EE85-69D3-FE52-8CF7-395D-2EA9
+            /// </summary>
+            public class FingerPrint
+            {
+                private static string fingerPrint = string.Empty;
+                public static string Value()
+                {
+                    if (string.IsNullOrEmpty(fingerPrint))
+                    {
+                        fingerPrint = GetHash("CPU >> " + cpuId() + "\nBIOS >> " + biosId() + "\nBASE >> " + baseId() + "\nMAC >> " + macId());
+                    }
+                    return fingerPrint;
+                }
+                private static string GetHash(string s)
+                {
+                    MD5 sec = new MD5CryptoServiceProvider();
+                    ASCIIEncoding enc = new ASCIIEncoding();
+                    byte[] bt = enc.GetBytes(s);
+                    return GetHexString(sec.ComputeHash(bt));
+                }
+                private static string GetHexString(byte[] bt)
+                {
+                    string s = string.Empty;
+                    for (int i = 0; i < bt.Length; i++)
+                    {
+                        byte b = bt[i];
+                        int n, n1, n2;
+                        n = (int)b;
+                        n1 = n & 15;
+                        n2 = (n >> 4) & 15;
+                        if (n2 > 9)
+                            s += ((char)(n2 - 10 + (int)'A')).ToString();
+                        else
+                            s += n2.ToString();
+                        if (n1 > 9)
+                            s += ((char)(n1 - 10 + (int)'A')).ToString();
+                        else
+                            s += n1.ToString();
+                        if ((i + 1) != bt.Length && (i + 1) % 2 == 0) s += "-";
+                    }
+                    return s;
+                }
+                #region Original Device ID Getting Code
+                //Return a hardware identifier
+                private static string identifier
+                (string wmiClass, string wmiProperty, string wmiMustBeTrue)
+                {
+                    string result = "";
+                    ManagementClass mc =
+                new ManagementClass(wmiClass);
+                    ManagementObjectCollection moc = mc.GetInstances();
+                    foreach (ManagementObject mo in moc)
+                    {
+                        if (mo[wmiMustBeTrue].ToString() == "True")
+                        {
+                            //Only get the first one
+                            if (result == "")
+                            {
+                                try
+                                {
+                                    result = mo[wmiProperty].ToString();
+                                    break;
+                                }
+                                catch
+                                {
+                                }
+                            }
+                        }
+                    }
+                    return result;
+                }
+                //Return a hardware identifier
+                private static string identifier(string wmiClass, string wmiProperty)
+                {
+                    string result = "";
+                    ManagementClass mc =
+                new ManagementClass(wmiClass);
+                    ManagementObjectCollection moc = mc.GetInstances();
+                    foreach (ManagementObject mo in moc)
+                    {
+                        //Only get the first one
+                        if (result == "")
+                        {
+                            try
+                            {
+                                result = mo[wmiProperty].ToString();
+                                break;
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+                    return result;
+                }
+                private static string cpuId()
+                {
+                    //Uses first CPU identifier available in order of preference
+                    //Don't get all identifiers, as it is very time consuming
+                    string retVal = identifier("Win32_Processor", "UniqueId");
+                    if (retVal == "") //If no UniqueID, use ProcessorID
+                    {
+                        retVal = identifier("Win32_Processor", "ProcessorId");
+                        if (retVal == "") //If no ProcessorId, use Name
+                        {
+                            retVal = identifier("Win32_Processor", "Name");
+                            if (retVal == "") //If no Name, use Manufacturer
+                            {
+                                retVal = identifier("Win32_Processor", "Manufacturer");
+                            }
+                            //Add clock speed for extra security
+                            retVal += identifier("Win32_Processor", "MaxClockSpeed");
+                        }
+                    }
+                    return retVal;
+                }
+                //BIOS Identifier
+                private static string biosId()
+                {
+                    return identifier("Win32_BIOS", "Manufacturer")
+                    + identifier("Win32_BIOS", "SMBIOSBIOSVersion")
+                    + identifier("Win32_BIOS", "IdentificationCode")
+                    + identifier("Win32_BIOS", "SerialNumber")
+                    + identifier("Win32_BIOS", "ReleaseDate")
+                    + identifier("Win32_BIOS", "Version");
+                }
+                //Main physical hard drive ID
+                private static string diskId()
+                {
+                    return identifier("Win32_DiskDrive", "Model")
+                    + identifier("Win32_DiskDrive", "Manufacturer")
+                    + identifier("Win32_DiskDrive", "Signature")
+                    + identifier("Win32_DiskDrive", "TotalHeads");
+                }
+                //Motherboard ID
+                private static string baseId()
+                {
+                    return identifier("Win32_BaseBoard", "Model")
+                    + identifier("Win32_BaseBoard", "Manufacturer")
+                    + identifier("Win32_BaseBoard", "Name")
+                    + identifier("Win32_BaseBoard", "SerialNumber");
+                }
+                //Primary video controller ID
+                private static string videoId()
+                {
+                    return identifier("Win32_VideoController", "DriverVersion")
+                    + identifier("Win32_VideoController", "Name");
+                }
+                //First enabled network card ID
+                private static string macId()
+                {
+                    return identifier("Win32_NetworkAdapterConfiguration",
+                        "MACAddress", "IPEnabled");
+                }
+                #endregion
+            }
+            public class CFunctions
+            {
+                public static bool IsAdministrator()
+                {
+                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                    WindowsPrincipal principal = new WindowsPrincipal(identity);
+                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                }
+                public static string GetPublicIP()
+                {
+                    return new WebClient().DownloadString(@"http://icanhazip.com").Trim();
+                }
+                public static string GetMacAddress()
+                {
+                    return (from nic in NetworkInterface.GetAllNetworkInterfaces()
+                            where nic.OperationalStatus == OperationalStatus.Up
+                            select nic.GetPhysicalAddress().ToString()).FirstOrDefault();
+                }
+                public static string GetCurrentLoggedUser()
+                {
+                    string ret = WindowsIdentity.GetCurrent().Name;
+                    return ret;
+                }
+                public static string GetComputerName()
+                {
+                    return Dns.GetHostName();
+                }
+                public static string GetCurrentCulture()
+                {
+                    return CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                }
+                public static string GetAppNetVersion()
+                {
+                    return Assembly.GetExecutingAssembly().GetReferencedAssemblies().Where(x => x.Name == "System.Core").First().Version.ToString();
+                }
+                public static string GetOSName()
+                {
+                    var name = (from x in new ManagementObjectSearcher("SELECT Caption FROM Win32_OperatingSystem").Get().Cast<ManagementObject>()
+                                select x.GetPropertyValue("Caption")).FirstOrDefault();
+                    return name != null ? name.ToString() : "Unknown";
                 }
             }
         }
@@ -456,17 +662,6 @@ namespace Platinium
         }
         namespace Info
         {
-            [Serializable]
-            public class LocationInfo
-            {
-                public string City { get; set; }
-                public string Country { get; set; }
-                public float Latitude { get; set; }
-                public float Longitude { get; set; }
-                public string Region { get; set; }
-                public int TimeZone { get; set; }
-                public string ZipCode { get; set; }
-            }
             public enum BaseInfoType
             {
                 Client,
@@ -479,14 +674,13 @@ namespace Platinium
                 public string IP { get; set; }
                 public string MACAddress { get; set; }
                 public string UserName { get; set; }
+                public string ComputerName { get; set; }
                 public string UID { get; set; }
                 public string Language { get; set; }
                 public bool IsAdministrator { get; set; }
-                public LocationInfo Location { get; set; }
                 public string OSName { get; set; }
-                public short AppVersion { get; set; }
-                public string FrameworkVersion { get; set; }
-                public List<Metadata> Plugins { get; set; }
+                public double AppVersion { get; private set; }
+                public string AppNetVersion { get; set; }
 
                 public BaseInfoType Type { get; set; }
                 [NonSerialized]
@@ -494,20 +688,23 @@ namespace Platinium
                 public Connector Connector { get { return _connector; } set { _connector = value; } }
                 public ClientInfo()
                 {
-
+                    AppVersion = 1.0;
                 }
                 public ClientInfo(string uid, BaseInfoType type)
                 {
+                    AppVersion = 1.0;
                     UID = uid;
                     Type = type;
                 }
                 public ClientInfo(string uid)
                 {
+                    AppVersion = 1.0;
                     UID = uid;
                     Type = BaseInfoType.Client;
                 }
                 public ClientInfo(BaseInfoType type)
                 {
+                    AppVersion = 1.0;
                     Type = type;
                 }
                 private IEnumerable<object> Info()
@@ -515,21 +712,14 @@ namespace Platinium
                     yield return IP;
                     yield return MACAddress;
                     yield return UserName;
+                    yield return ComputerName;
                     yield return OSName;
                     yield return AppVersion;
-                    yield return FrameworkVersion;
+                    yield return AppNetVersion;
                     yield return IsAdministrator;
                     yield return UID;
                     yield return Language;
-                    yield return Location.City;
-                    yield return Location.ZipCode;
-                    yield return Location.Country;
-                    yield return Location.Region;
-                    yield return Location.TimeZone;
-                    yield return Location.Latitude;
-                    yield return Location.Longitude;
                     yield return Type;
-                    yield return Plugins;
                 }
                 public IEnumerator<object> GetEnumerator()
                 {

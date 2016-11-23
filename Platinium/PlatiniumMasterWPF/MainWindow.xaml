@@ -10,7 +10,7 @@
         Title="Platinium" GlowBrush="{DynamicResource AccentColorBrush}" Height="474" Width="878" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
         <ListBox x:Name="listboxPlugins" BorderThickness="0" 
-     ItemsSource="{Binding}" HorizontalAlignment="Left" Width="208" Margin="0,35,0,125">
+     ItemsSource="{Binding}" HorizontalAlignment="Left" Width="198" Margin="10,35,0,125">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
@@ -21,8 +21,8 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="120" Margin="0,325,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="872"/>
-        <DataGrid x:Name="datagridClients" CanUserAddRows="false" ItemsSource="{Binding}" HorizontalAlignment="Left" Margin="213,35,0,0" VerticalAlignment="Top" Height="285" Width="659" AutoGenerateColumns="False">
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="110" Margin="10,325,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="852"/>
+        <DataGrid x:Name="datagridClients" CanUserAddRows="false" ItemsSource="{Binding}" HorizontalAlignment="Left" Margin="213,35,0,0" VerticalAlignment="Top" Height="285" Width="649" AutoGenerateColumns="False">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="User Name" Binding="{Binding UserName}" ClipboardContentBinding="{x:Null}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="IP" Binding="{Binding IP}" ClipboardContentBinding="{x:Null}"/>
@@ -30,8 +30,8 @@
                 <DataGridTextColumn Header="Administrator" Binding="{Binding IsAdministrator}" ClipboardContentBinding="{x:Null}"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Button x:Name="buttonClientList" Content="Load Client List" HorizontalAlignment="Left" Margin="730,0,0,0" VerticalAlignment="Top" Width="132" Height="30" Click="buttonClientList_Click"/>
-        <Button x:Name="buttonPlugin" Content="Load Plugin List" HorizontalAlignment="Left" Margin="579,0,0,0" VerticalAlignment="Top" Width="146" RenderTransformOrigin="0.613,0.04" Height="30" Click="buttonPlugin_Click"/>
+        <Button x:Name="buttonClientList" Content="Load Client List" HorizontalAlignment="Left" Margin="730,0,0,0" VerticalAlignment="Top" Width="132" Height="35" Click="buttonClientList_Click"/>
+        <Button x:Name="buttonPlugin" Content="Load Plugin List" HorizontalAlignment="Left" Margin="579,0,0,0" VerticalAlignment="Top" Width="146" RenderTransformOrigin="0.613,0.04" Height="35" Click="buttonPlugin_Click"/>
 
     </Grid>
 </controls:MetroWindow>

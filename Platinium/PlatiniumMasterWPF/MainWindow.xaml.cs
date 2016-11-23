@@ -30,17 +30,18 @@ namespace PlatiniumMasterWPF
         }
         public void InitializeMaster()
         {
-            Thread.Sleep(5000);
             master = new MasterController();
         }
         private void GetPlugins()
         {
             master.GetPlugins();
+            Thread.Sleep(50);
             listboxPlugins.ItemsSource = DataStructure.PluginDictionary;
         }
         private void GetClients()
         {
             master.GetClientList();
+            Thread.Sleep(50);
             datagridClients.ItemsSource = DataStructure.ClientList;
         }
 

@@ -45,7 +45,7 @@ namespace Platinium
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     if (package.From != null)
                     {
-                        Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From - {2}\n* To - {3}*************** END GET ***************", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.UID.EmptyIfNull());
+                        Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From Type - {2}\n* From - {3}\n* To Type - {4}\n* To - {5}\n*************** END GET ***************", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.Type.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.Type.EmptyIfNull(), package.To.UID.EmptyIfNull());
                     }
                     else
                     {
