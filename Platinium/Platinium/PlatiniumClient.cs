@@ -15,6 +15,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Platinium
 {
@@ -25,15 +26,32 @@ namespace Platinium
             private ClientInfo ClientInfo = BuildClientInfo();
             private TcpClient clientSocket = new TcpClient();
             private NetworkStream serverStream = default(NetworkStream);
+            private static bool isConnected = false;
             public PlatiniumClient()
             {
                 Console.Title = "Platinium Beta Client";
-                clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
-                serverStream = clientSocket.GetStream();
-                Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server)));
-                Thread GetThread = new Thread(Get);
-                GetThread.Start();
-                LoadPlugins();
+                Initialize();
+            }
+            private void Initialize()
+            {
+                while (true)
+                {
+                    if (!isConnected)
+                    {
+                        try
+                        {
+                            clientSocket = new TcpClient();
+                            clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
+                            serverStream = clientSocket.GetStream();
+                            Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server)));
+                            Thread GetThread = new Thread(Get);
+                            GetThread.Start();
+                            LoadPlugins();
+                            isConnected = true;
+                        }
+                        catch (Exception) { }
+                    }
+                }
             }
             private void LoadPlugins()
             {
@@ -42,10 +60,14 @@ namespace Platinium
             }
             private void Write(Package package)
             {
-                TransportPackage TransportPackage = Serializer.Serialize(package);
-                serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                serverStream.Flush();
-                Console.WriteLine("WRITE");
+                try
+                {
+                    TransportPackage TransportPackage = Serializer.Serialize(package);
+                    serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                    serverStream.Flush();
+                    Console.WriteLine("WRITE");
+                }
+                catch (Exception) { isConnected = false; }
             }
             private void Get()
             {
@@ -53,7 +75,11 @@ namespace Platinium
                 {
                     serverStream = clientSocket.GetStream();
                     TransportPackage TransportPackage = new TransportPackage();
-                    serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                    try
+                    {
+                        serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                    }
+                    catch (Exception) { isConnected = false; break; }
                     serverStream.Flush();
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     Console.WriteLine(package.Content.EmptyIfNull());
@@ -62,6 +88,7 @@ namespace Platinium
                     Write(package);
                     Console.WriteLine("GET");
                 }
+                Thread.CurrentThread.Abort();
             }
             private static ClientInfo BuildClientInfo()
             {

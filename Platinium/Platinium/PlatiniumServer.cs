@@ -37,21 +37,25 @@ namespace Platinium
             {
                 while (true)
                 {
-                    networkStream = null;
-                    networkStream = ClientSocket.GetStream();
-                    TransportPackage TransportPackage = new TransportPackage();
-                    networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                    networkStream.Flush();
-                    Package package = (Package)Serializer.Deserialize(TransportPackage);
-                    if (package.From != null)
+                    try
                     {
-                        Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From Type - {2}\n* From - {3}\n* To Type - {4}\n* To - {5}\n*************** END GET ***************", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.Type.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.Type.EmptyIfNull(), package.To.UID.EmptyIfNull());
+                        networkStream = null;
+                        networkStream = ClientSocket.GetStream();
+                        TransportPackage TransportPackage = new TransportPackage();
+                        networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                        networkStream.Flush();
+                        Package package = (Package)Serializer.Deserialize(TransportPackage);
+                        if (package.From != null)
+                        {
+                            Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From Type - {2}\n* From - {3}\n* To Type - {4}\n* To - {5}\n*************** END GET ***************", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.Type.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.Type.EmptyIfNull(), package.To.UID.EmptyIfNull());
+                        }
+                        else
+                        {
+                            Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}", package.PackageType);
+                        }
+                        Communicate(package);
                     }
-                    else
-                    {
-                        Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}", package.PackageType);
-                    }
-                    Communicate(package);
+                    catch (Exception) { break; }
                 }
             }
             public static void Communicate(Package package)
@@ -170,7 +174,7 @@ namespace Platinium
                     if (Info.Type == BaseInfoType.Client)
                     {
                         Console.WriteLine("*************** CLIENT CONNECTED ***************");
-                        if (!DataStructure.ClientList.Contains(Info))
+                        if (!DataStructure.ClientList.Any(x => x.UID == Info.UID))
                         {
                             Console.WriteLine("*************** AUTHENTICATED ***************");
                             DataStructure.ClientList.Add(Info);
@@ -179,13 +183,13 @@ namespace Platinium
                     else if (Info.Type == BaseInfoType.Master)
                     {
                         Console.WriteLine("*************** MASTER CONNECTED ***************");
-                        if (!DataStructure.MasterList.Contains(Info))
+                        if (!DataStructure.MasterList.Any(x => x.UID == Info.UID))
                         {
                             Console.WriteLine("*************** AUTHENTICATED ***************");
                             DataStructure.MasterList.Add(Info);
                         }
                     }
-                    if (!DataStructure.ClientList.Contains(Info) || !DataStructure.MasterList.Contains(Info))
+                    if (DataStructure.ClientList.Any(x => x.UID == Info.UID && x.IsConnected == false) || DataStructure.MasterList.Any(x => x.UID == Info.UID && x.IsConnected == false))
                     {
                         Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
                         foreach (var item in ddata)
@@ -264,8 +268,11 @@ namespace Platinium
                             TcpClient testTcp = client.Connector.ClientSocket;
                             if (!testTcp.Connected)
                             {
-                                DataStructure.ClientList.Remove(client);
-                                break;
+                                client.IsConnected = false;
+                            }
+                            else
+                            {
+                                client.IsConnected = true;
                             }
                         }
 

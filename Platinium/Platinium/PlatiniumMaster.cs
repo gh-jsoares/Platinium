@@ -5,12 +5,14 @@ using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Info;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Platinium
 {
@@ -21,20 +23,29 @@ namespace Platinium
             private ClientInfo MasterInfo = BuildMasterInfo();
             private TcpClient masterSocket = new TcpClient();
             private NetworkStream serverStream = default(NetworkStream);
+            private bool isConnected = false;
             public PlatiniumMaster()
             {
                 //Console.Title = "Platinium Beta Master";
-                masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
-                serverStream = masterSocket.GetStream();
-                Package package = new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server));
-                TransportPackage TransportPackage = Serializer.Serialize(package);
-                serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                serverStream.Flush();
-                Thread GetThread = new Thread(Get);
-                GetThread.Start();
-                //Thread WriteThread = new Thread(Write);
-                //WriteThread.Start();
-                //Write(new Package("TEST|Action", null, PackageType.PluginCommand, MasterInfo, new ClientInfo("2")));
+            }
+            public void Initialize()
+            {
+                try
+                {
+                    masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
+                    serverStream = masterSocket.GetStream();
+                    Package package = new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server));
+                    TransportPackage TransportPackage = Serializer.Serialize(package);
+                    serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                    serverStream.Flush();
+                    Thread GetThread = new Thread(Get);
+                    GetThread.Start();
+                    //Thread WriteThread = new Thread(Write);
+                    //WriteThread.Start();
+                    //Write(new Package("TEST|Action", null, PackageType.PluginCommand, MasterInfo, new ClientInfo("2")));
+                    isConnected = true;
+                }
+                catch (Exception) { }
             }
             public void GetPlugins()
             {
@@ -46,10 +57,14 @@ namespace Platinium
             }
             private void Write(Package package)
             {
-                TransportPackage TransportPackage = Serializer.Serialize(package);
-                serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                serverStream.Flush();
-                Console.WriteLine("WRITE");
+                try
+                {
+                    TransportPackage TransportPackage = Serializer.Serialize(package);
+                    serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                    serverStream.Flush();
+                    Console.WriteLine("WRITE");
+                }
+                catch (Exception) { isConnected = false; }
             }
             private void Get()
             {
@@ -57,7 +72,11 @@ namespace Platinium
                 {
                     serverStream = masterSocket.GetStream();
                     TransportPackage TransportPackage = new TransportPackage();
-                    serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                    try
+                    {
+                        serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                    }
+                    catch (Exception) { isConnected = false; MessageBox.Show("Unable to read data from the server"); break; }
                     Package package = (Package)Serializer.Deserialize(TransportPackage);
                     package = PackageFactory.HandleMasterPackages(package);
                     Console.WriteLine(package.Content.EmptyIfNull());

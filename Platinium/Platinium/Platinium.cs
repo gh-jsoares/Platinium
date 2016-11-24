@@ -681,6 +681,7 @@ namespace Platinium
                 public string OSName { get; set; }
                 public double AppVersion { get; private set; }
                 public string AppNetVersion { get; set; }
+                public bool IsConnected { get; set; } = false;
 
                 public BaseInfoType Type { get; set; }
                 [NonSerialized]

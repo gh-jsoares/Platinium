@@ -31,6 +31,11 @@ namespace PlatiniumMasterWPF
         public void InitializeMaster()
         {
             master = new MasterController();
+            Connect();
+        }
+        private void Connect()
+        {
+            master.Connect();
         }
         private void GetPlugins()
         {
