@@ -17,7 +17,6 @@ using Platinium.Shared.Plugin;
 using Platinium.Shared.Data.Structures;
 using System.Threading;
 using Platinium.Shared.Content;
-using Platinium.Connection;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Management;
@@ -26,6 +25,7 @@ using System.Security.Principal;
 using System.Net.NetworkInformation;
 using System.DirectoryServices.AccountManagement;
 using System.Globalization;
+using Platinium.Connection;
 
 namespace Platinium
 {

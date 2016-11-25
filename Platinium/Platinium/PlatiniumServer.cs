@@ -155,7 +155,9 @@ namespace Platinium
                 HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
                 Thread hearthBeatTask = new Thread(HearthBeat);
                 Thread clientConnection = new Thread(CheckClientConnection);
+                Thread masterConnection = new Thread(CheckMasterConnection);
                 clientConnection.Start();
+                masterConnection.Start();
                 Listen();
             }
             private void Listen()
@@ -275,11 +277,30 @@ namespace Platinium
                                 client.IsConnected = true;
                             }
                         }
-
                     }
-                    catch (Exception)
+                    catch (Exception) { }
+                }
+            }
+            private void CheckMasterConnection()
+            {
+                while (true)
+                {
+                    try
                     {
+                        foreach (var master in DataStructure.MasterList)
+                        {
+                            TcpClient testTcp = master.Connector.ClientSocket;
+                            if (!testTcp.Connected)
+                            {
+                                master.IsConnected = false;
+                            }
+                            else
+                            {
+                                master.IsConnected = true;
+                            }
+                        }
                     }
+                    catch (Exception) { }
                 }
             }
         }

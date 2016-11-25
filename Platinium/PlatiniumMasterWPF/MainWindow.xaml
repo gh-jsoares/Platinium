@@ -22,12 +22,37 @@
             </ListBox.ItemTemplate>
         </ListBox>
         <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="110" Margin="10,325,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="852"/>
-        <DataGrid x:Name="datagridClients" CanUserAddRows="false" ItemsSource="{Binding}" HorizontalAlignment="Left" Margin="213,35,0,0" VerticalAlignment="Top" Height="285" Width="649" AutoGenerateColumns="False">
+        <DataGrid x:Name="datagridClients" CanUserAddRows="false" ItemsSource="{Binding}" HorizontalAlignment="Left" Margin="213,35,0,0" VerticalAlignment="Top" Height="285" Width="649" BorderThickness="1" IsSynchronizedWithCurrentItem="True" AutoGenerateColumns="False" IsTextSearchEnabled="True" TabIndex="2147483642" GridLinesVisibility="All" HeadersVisibility="Column" CanUserResizeRows="False" IsReadOnly="True">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="User Name" Binding="{Binding UserName}" ClipboardContentBinding="{x:Null}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="IP" Binding="{Binding IP}" ClipboardContentBinding="{x:Null}"/>
-                <DataGridTextColumn Header="UID" Binding="{Binding UID}" ClipboardContentBinding="{x:Null}"/>
-                <DataGridTextColumn Header="Administrator" Binding="{Binding IsAdministrator}" ClipboardContentBinding="{x:Null}"/>
+                <DataGridCheckBoxColumn Width="100" Header="Status" Binding="{Binding IsConnected}" IsReadOnly="True">
+                    <DataGridCheckBoxColumn.ElementStyle>
+                        <Style TargetType="{x:Type CheckBox}">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                                        <Image MaxWidth="32" MaxHeight="32">
+                                            <Image.Style>
+                                                <Style TargetType="{x:Type Image}">
+                                                    <Setter Property="Source" Value="resources/disable.png" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=CheckBox}}" Value="True">
+                                                            <Setter Property="Source" Value="resources/enable.png" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGridCheckBoxColumn.ElementStyle>
+                </DataGridCheckBoxColumn>
+                <DataGridTextColumn Width="*" Header="User Name" Binding="{Binding UserName}" ClipboardContentBinding="{x:Null}" IsReadOnly="True"/>
+                <DataGridTextColumn Width="*" Header="IP" Binding="{Binding IP}" ClipboardContentBinding="{x:Null}" IsReadOnly="True"/>
+                <DataGridTextColumn Width="*" Header="UID" Binding="{Binding UID}" ClipboardContentBinding="{x:Null}" IsReadOnly="True"/>
+                <DataGridTextColumn Width="*" Header="Administrator" Binding="{Binding IsAdministrator}" ClipboardContentBinding="{x:Null}" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
         <Button x:Name="buttonClientList" Content="Load Client List" HorizontalAlignment="Left" Margin="730,0,0,0" VerticalAlignment="Top" Width="132" Height="35" Click="buttonClientList_Click"/>
