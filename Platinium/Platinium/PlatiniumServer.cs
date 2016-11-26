@@ -1,6 +1,7 @@
 ﻿using Platinium.Connection;
 using Platinium.Shared.Content;
 using Platinium.Shared.Core;
+using Platinium.Shared.Data.Network;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Data.Structures;
@@ -39,12 +40,7 @@ namespace Platinium
                 {
                     try
                     {
-                        networkStream = null;
-                        networkStream = ClientSocket.GetStream();
-                        TransportPackage TransportPackage = new TransportPackage();
-                        networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                        networkStream.Flush();
-                        Package package = (Package)Serializer.Deserialize(TransportPackage);
+                        Package package = NetworkManagement.ReadData(ClientSocket);
                         if (package.From != null)
                         {
                             Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From Type - {2}\n* From - {3}\n* To Type - {4}\n* To - {5}\n*************** END GET ***************", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.Type.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.Type.EmptyIfNull(), package.To.UID.EmptyIfNull());
@@ -66,14 +62,9 @@ namespace Platinium
                     {
                         if (package.To.UID == item.UID)
                         {
-                            TcpClient communicationSocket = item.Connector.ClientSocket;
-                            NetworkStream communicationStream = communicationSocket.GetStream();
-                            Package outPackage = PackageFactory.HandleServerPackages(package);
                             if (package.PackageType != PackageType.Response)
                             {
-                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                communicationStream.Flush();
+                                NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
                             }
                         }
                     }
@@ -84,14 +75,9 @@ namespace Platinium
                     {
                         if (package.To.UID == item.UID)
                         {
-                            TcpClient communicationSocket = item.Connector.ClientSocket;
-                            NetworkStream communicationStream = communicationSocket.GetStream();
-                            Package outPackage = PackageFactory.HandleServerPackages(package);
                             if (package.PackageType != PackageType.Response)
                             {
-                                TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                                communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                communicationStream.Flush();
+                                NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
                             }
                         }
                     }
@@ -106,14 +92,9 @@ namespace Platinium
                             {
                                 if (package.From.UID == item.UID)
                                 {
-                                    TcpClient communicationSocket = item.Connector.ClientSocket;
-                                    NetworkStream communicationStream = communicationSocket.GetStream();
-                                    Package outPackage = PackageFactory.HandleServerPackages(package);
                                     if (package.PackageType != PackageType.Response)
                                     {
-                                        TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                                        communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                        communicationStream.Flush();
+                                        NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
                                     }
                                 }
                             }
@@ -124,14 +105,9 @@ namespace Platinium
                             {
                                 if (package.From.UID == item.UID)
                                 {
-                                    TcpClient communicationSocket = item.Connector.ClientSocket;
-                                    NetworkStream communicationStream = communicationSocket.GetStream();
-                                    Package outPackage = PackageFactory.HandleServerPackages(package);
                                     if (package.PackageType != PackageType.Response)
                                     {
-                                        TransportPackage TransportPackage = Serializer.Serialize(outPackage);
-                                        communicationStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                                        communicationStream.Flush();
+                                        NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
                                     }
                                 }
                             }
@@ -167,10 +143,7 @@ namespace Platinium
                 while (true)
                 {
                     TcpClient Socket = ServerSocket.AcceptTcpClient();
-                    TransportPackage TransportPackage = new TransportPackage();
-                    NetworkStream networkStream = Socket.GetStream();
-                    networkStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                    Package package = (Package)Serializer.Deserialize(TransportPackage);
+                    Package package = NetworkManagement.ReadData(Socket);
                     ClientInfo Info = (ClientInfo)package.Content;
                     Info.Connector = new Connector();
                     if (Info.Type == BaseInfoType.Client)

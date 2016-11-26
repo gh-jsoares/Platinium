@@ -16,6 +16,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
+using System.Configuration;
+using Platinium.Shared.Data.Network;
 
 namespace Platinium
 {
@@ -25,7 +27,6 @@ namespace Platinium
         {
             private ClientInfo ClientInfo = BuildClientInfo();
             private TcpClient clientSocket = new TcpClient();
-            private NetworkStream serverStream = default(NetworkStream);
             private static bool isConnected = false;
             public PlatiniumClient()
             {
@@ -42,7 +43,6 @@ namespace Platinium
                         {
                             clientSocket = new TcpClient();
                             clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
-                            serverStream = clientSocket.GetStream();
                             Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server)));
                             Thread GetThread = new Thread(Get);
                             GetThread.Start();
@@ -62,10 +62,7 @@ namespace Platinium
             {
                 try
                 {
-                    TransportPackage TransportPackage = Serializer.Serialize(package);
-                    serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                    serverStream.Flush();
-                    Console.WriteLine("WRITE");
+                    NetworkManagement.WriteData(clientSocket, package);
                 }
                 catch (Exception) { isConnected = false; }
             }
@@ -73,19 +70,15 @@ namespace Platinium
             {
                 while (true)
                 {
-                    serverStream = clientSocket.GetStream();
-                    TransportPackage TransportPackage = new TransportPackage();
+                    Package package;
                     try
                     {
-                        serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                        package = NetworkManagement.ReadData(clientSocket);
                     }
                     catch (Exception) { isConnected = false; break; }
-                    serverStream.Flush();
-                    Package package = (Package)Serializer.Deserialize(TransportPackage);
                     Console.WriteLine(package.Content.EmptyIfNull());
                     Console.WriteLine(package.PackageType.ToString());
-                    package = PackageFactory.HandleClientPackages(package);
-                    Write(package);
+                    Write(PackageFactory.HandleClientPackages(package));
                     Console.WriteLine("GET");
                 }
                 Thread.CurrentThread.Abort();

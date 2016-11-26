@@ -1,5 +1,6 @@
 ﻿using Platinium.Shared.Content;
 using Platinium.Shared.Core;
+using Platinium.Shared.Data.Network;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Info;
@@ -22,7 +23,6 @@ namespace Platinium
         {
             private ClientInfo MasterInfo = BuildMasterInfo();
             private TcpClient masterSocket = new TcpClient();
-            private NetworkStream serverStream = default(NetworkStream);
             private bool isConnected = false;
             public PlatiniumMaster()
             {
@@ -33,11 +33,7 @@ namespace Platinium
                 try
                 {
                     masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
-                    serverStream = masterSocket.GetStream();
-                    Package package = new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server));
-                    TransportPackage TransportPackage = Serializer.Serialize(package);
-                    serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                    serverStream.Flush();
+                    Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server)));
                     Thread GetThread = new Thread(Get);
                     GetThread.Start();
                     //Thread WriteThread = new Thread(Write);
@@ -59,9 +55,7 @@ namespace Platinium
             {
                 try
                 {
-                    TransportPackage TransportPackage = Serializer.Serialize(package);
-                    serverStream.Write(TransportPackage.Data, 0, TransportPackage.Data.Length);
-                    serverStream.Flush();
+                    NetworkManagement.WriteData(masterSocket, package);
                     Console.WriteLine("WRITE");
                 }
                 catch (Exception) { isConnected = false; }
@@ -70,14 +64,12 @@ namespace Platinium
             {
                 while (true)
                 {
-                    serverStream = masterSocket.GetStream();
-                    TransportPackage TransportPackage = new TransportPackage();
+                    Package package;
                     try
                     {
-                        serverStream.Read(TransportPackage.Data, 0, TransportPackage.Data.Length);
+                        package = NetworkManagement.ReadData(masterSocket);
                     }
                     catch (Exception) { isConnected = false; MessageBox.Show("Unable to read data from the server"); break; }
-                    Package package = (Package)Serializer.Deserialize(TransportPackage);
                     package = PackageFactory.HandleMasterPackages(package);
                     Console.WriteLine(package.Content.EmptyIfNull());
                     Console.WriteLine(package.PackageType.ToString());
