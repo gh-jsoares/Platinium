@@ -35,6 +35,7 @@ namespace PlatiniumClient
         }
         private void InitializeEnvironment()
         {
+            Directory.CreateDirectory(ROOT_PATH);
             Directory.CreateDirectory(PLUGINS_PATH);
             Directory.CreateDirectory(CONFIG_PATH);
             Directory.CreateDirectory(COREASSEMBLY_PATH);

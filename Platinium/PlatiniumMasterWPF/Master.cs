@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace PlatiniumMasterWPF
 {
-    class MasterController
+    public class MasterController
     {
         private static string DLL_URL = "http://repositorio123.esy.es/Platinium.css";
+        private static string ROOT_PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Platinium");
+        public static string LOG_PATH = Path.Combine(ROOT_PATH, "log");
+        public static string FILE_LOG_PATH = Path.Combine(LOG_PATH, "log.log");
         private byte[] raw_assembly;
         private Assembly assembly;
         private Type type;
@@ -28,6 +33,10 @@ namespace PlatiniumMasterWPF
         }
         private void InitializeEnvironment()
         {
+            Directory.CreateDirectory(ROOT_PATH);
+            Directory.CreateDirectory(LOG_PATH);
+            var logFile = File.Create(FILE_LOG_PATH);
+            logFile.Close();
             StaticEnvironmentLoading();
         }
         private void DynamicEnvironmentLoading()

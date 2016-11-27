@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Platinium
 {
@@ -73,7 +74,6 @@ namespace Platinium
                     package = PackageFactory.HandleMasterPackages(package);
                     Console.WriteLine(package.Content.EmptyIfNull());
                     Console.WriteLine(package.PackageType.ToString());
-                    Console.WriteLine("GET");
                 }
             }
             private static ClientInfo BuildMasterInfo()

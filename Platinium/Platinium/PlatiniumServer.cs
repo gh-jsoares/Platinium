@@ -56,63 +56,63 @@ namespace Platinium
             }
             public static void Communicate(Package package)
             {
-                if (package.To.Type == BaseInfoType.Client)
+                switch (package.To.Type)
                 {
-                    foreach (var item in DataStructure.ClientList)
-                    {
-                        if (package.To.UID == item.UID)
+                    case BaseInfoType.Client:
+                        foreach (var item in DataStructure.ClientList)
                         {
-                            if (package.PackageType != PackageType.Response)
+                            if (package.To.UID == item.UID)
                             {
-                                NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
-                            }
-                        }
-                    }
-                }
-                else if (package.To.Type == BaseInfoType.Master)
-                {
-                    foreach (var item in DataStructure.MasterList)
-                    {
-                        if (package.To.UID == item.UID)
-                        {
-                            if (package.PackageType != PackageType.Response)
-                            {
-                                NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
-                            }
-                        }
-                    }
-                }
-                else if (package.To.Type == BaseInfoType.Server)
-                {
-                    if (package.From != null)
-                    {
-                        if (package.From.Type == BaseInfoType.Master)
-                        {
-                            foreach (var item in DataStructure.MasterList)
-                            {
-                                if (package.From.UID == item.UID)
+                                if (package.PackageType != PackageType.Response)
                                 {
-                                    if (package.PackageType != PackageType.Response)
+                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                }
+                            }
+                        }
+                        break;
+                    case BaseInfoType.Master:
+                        foreach (var item in DataStructure.MasterList)
+                        {
+                            if (package.To.UID == item.UID)
+                            {
+                                if (package.PackageType != PackageType.Response)
+                                {
+                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                }
+                            }
+                        }
+                        break;
+                    case BaseInfoType.Server:
+                        if (package.From != null)
+                        {
+                            if (package.From.Type == BaseInfoType.Master)
+                            {
+                                foreach (var item in DataStructure.MasterList)
+                                {
+                                    if (package.From.UID == item.UID)
                                     {
-                                        NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                        if (package.PackageType != PackageType.Response)
+                                        {
+                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                        }
+                                    }
+                                }
+                            }
+                            else if (package.From.Type == BaseInfoType.Client)
+                            {
+                                foreach (var item in DataStructure.ClientList)
+                                {
+                                    if (package.From.UID == item.UID)
+                                    {
+                                        if (package.PackageType != PackageType.Response)
+                                        {
+                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                        }
                                     }
                                 }
                             }
                         }
-                        else if (package.From.Type == BaseInfoType.Client)
-                        {
-                            foreach (var item in DataStructure.ClientList)
-                            {
-                                if (package.From.UID == item.UID)
-                                {
-                                    if (package.PackageType != PackageType.Response)
-                                    {
-                                        NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
-                                    }
-                                }
-                            }
-                        }
-                    }
+                        break;
                 }
             }
         }

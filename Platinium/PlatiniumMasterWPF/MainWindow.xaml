@@ -21,7 +21,6 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="110" Margin="10,325,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="852"/>
         <DataGrid x:Name="datagridClients" CanUserAddRows="false" ItemsSource="{Binding}" HorizontalAlignment="Left" Margin="213,35,0,0" VerticalAlignment="Top" Height="285" Width="649" BorderThickness="1" IsSynchronizedWithCurrentItem="True" AutoGenerateColumns="False" IsTextSearchEnabled="True" TabIndex="2147483642" GridLinesVisibility="All" HeadersVisibility="Column" CanUserResizeRows="False" IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Width="100" Header="Status" Binding="{Binding IsConnected}" IsReadOnly="True">
@@ -57,6 +56,6 @@
         </DataGrid>
         <Button x:Name="buttonClientList" Content="Load Client List" HorizontalAlignment="Left" Margin="730,0,0,0" VerticalAlignment="Top" Width="132" Height="35" Click="buttonClientList_Click"/>
         <Button x:Name="buttonPlugin" Content="Load Plugin List" HorizontalAlignment="Left" Margin="579,0,0,0" VerticalAlignment="Top" Width="146" RenderTransformOrigin="0.613,0.04" Height="35" Click="buttonPlugin_Click"/>
-
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="110" Margin="10,325,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="852"/>
     </Grid>
 </controls:MetroWindow>

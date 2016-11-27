@@ -18,7 +18,6 @@ using Platinium.Shared.Data.Structures;
 using System.Threading;
 using Platinium.Shared.Content;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Management;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -27,6 +26,10 @@ using System.DirectoryServices.AccountManagement;
 using System.Globalization;
 using Platinium.Connection;
 using Platinium.Shared.Data.Serialization;
+using System.Windows.Forms;
+using System.Windows.Threading;
+using System.IO.Compression;
+using Platinium.Shared.Data.Compression;
 
 namespace Platinium
 {
@@ -414,6 +417,44 @@ namespace Platinium
         }
         namespace Data
         {
+            namespace Compression
+            {
+                public class Compressor
+                {
+                    public static byte[] Compress(byte[] raw)
+                    {
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            using (GZipStream gzip = new GZipStream(ms, CompressionMode.Compress, true))
+                            {
+                                gzip.Write(raw, 0, raw.Length);
+                            }
+                            return ms.ToArray();
+                        }
+                    }
+                    public static byte[] Decompress(byte[] cgzip)
+                    {
+                        using (GZipStream gzip = new GZipStream(new MemoryStream(cgzip), CompressionMode.Decompress))
+                        {
+                            const int size = 4096;
+                            byte[] buffer = new byte[size];
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                int count = 0;
+                                do
+                                {
+                                    count = gzip.Read(buffer, 0, size);
+                                    if (count > 0)
+                                    {
+                                        ms.Write(buffer, 0, count);
+                                    }
+                                } while (count > 0);
+                                return ms.ToArray();
+                            }
+                        }
+                    }
+                }
+            }
             namespace Network
             {
                 public class NetworkManagement
@@ -432,11 +473,11 @@ namespace Platinium
                                 data.AddRange(buffer);
                             } while (networkStream.DataAvailable);
                         }
-                        return (Package)Serializer.Deserialize(data.ToArray());
+                        return (Package)Serializer.Deserialize(Compressor.Decompress(data.ToArray()));
                     }
                     public static void WriteData(TcpClient Socket, Package Package)
                     {
-                        byte[] data = Serializer.Serialize(Package);
+                        byte[] data = Compressor.Compress(Serializer.Serialize(Package));
                         NetworkStream networkStream = Socket.GetStream();
                         if (networkStream.CanWrite)
                         {
