@@ -30,6 +30,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using System.IO.Compression;
 using Platinium.Shared.Data.Compression;
+using Platinium.Shared.Core;
 
 namespace Platinium
 {
@@ -304,6 +305,29 @@ namespace Platinium
                     return ret != null ? ret.ToString() : "Unknown";
                 }
             }
+            public class Logger
+            {
+                public string Path { get; set; }
+                public Logger()
+                {
+
+                }
+                public void LogMessageToFile(string message)
+                {
+                    StreamWriter sw = File.AppendText(Path);
+                    try
+                    {
+                        string logLine = String.Format("[{0:G}]: {1}", DateTime.Now, message);
+                        sw.WriteLine(logLine);
+                    }
+                    catch (Exception) { }
+                    finally { sw.Close(); }
+                }
+            }
+            public enum LogLevel
+            {
+                Networ,
+            }
         }
         namespace Content
         {
@@ -475,6 +499,23 @@ namespace Platinium
                         }
                         return (Package)Serializer.Deserialize(Compressor.Decompress(data.ToArray()));
                     }
+                    public static Package ReadData(TcpClient Socket, Logger logger)
+                    {
+                        NetworkStream networkStream = Socket.GetStream();
+                        List<byte> data = new List<byte>();
+                        if (networkStream.CanRead)
+                        {
+                            byte[] buffer = new byte[1024];
+                            int totalBytesRead = 0;
+                            do
+                            {
+                                totalBytesRead = networkStream.Read(buffer, 0, buffer.Length);
+                                data.AddRange(buffer);
+                            } while (networkStream.DataAvailable);
+                            logger.LogMessageToFile($"Data received. Size {totalBytesRead} bytes.");
+                        }
+                        return (Package)Serializer.Deserialize(Compressor.Decompress(data.ToArray()));
+                    }
                     public static void WriteData(TcpClient Socket, Package Package)
                     {
                         byte[] data = Compressor.Compress(Serializer.Serialize(Package));
@@ -483,6 +524,16 @@ namespace Platinium
                         {
                             networkStream.Write(data, 0, data.Length);
                         }
+                    }
+                    public static void WriteData(TcpClient Socket, Package Package, Logger logger)
+                    {
+                        byte[] data = Compressor.Compress(Serializer.Serialize(Package));
+                        NetworkStream networkStream = Socket.GetStream();
+                        if (networkStream.CanWrite)
+                        {
+                            networkStream.Write(data, 0, data.Length);
+                        }
+                        logger.LogMessageToFile($"Data sent. Size {data.Length} bytes.");
                     }
                 }
             }

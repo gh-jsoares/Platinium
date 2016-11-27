@@ -24,7 +24,9 @@ namespace Platinium
         {
             private ClientInfo MasterInfo = BuildMasterInfo();
             private TcpClient masterSocket = new TcpClient();
+            public string FILE_LOG_PATH;
             private bool isConnected = false;
+            private static Logger logger = new Logger();
             public PlatiniumMaster()
             {
                 //Console.Title = "Platinium Beta Master";
@@ -33,6 +35,7 @@ namespace Platinium
             {
                 try
                 {
+                    logger.Path = FILE_LOG_PATH;
                     masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                     Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server)));
                     Thread GetThread = new Thread(Get);
@@ -57,7 +60,6 @@ namespace Platinium
                 try
                 {
                     NetworkManagement.WriteData(masterSocket, package);
-                    Console.WriteLine("WRITE");
                 }
                 catch (Exception) { isConnected = false; }
             }
@@ -68,12 +70,10 @@ namespace Platinium
                     Package package;
                     try
                     {
-                        package = NetworkManagement.ReadData(masterSocket);
+                        package = NetworkManagement.ReadData(masterSocket, logger);
                     }
                     catch (Exception) { isConnected = false; MessageBox.Show("Unable to read data from the server"); break; }
                     package = PackageFactory.HandleMasterPackages(package);
-                    Console.WriteLine(package.Content.EmptyIfNull());
-                    Console.WriteLine(package.PackageType.ToString());
                 }
             }
             private static ClientInfo BuildMasterInfo()
