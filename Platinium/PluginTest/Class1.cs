@@ -20,7 +20,6 @@ public class Plugin : IPlugin
     public string TEST = "OLA";
     public IPluginClientController ClientController { get; set; }
     public IPluginMasterController MasterController { get; set; }
-    public UserControlModule PluginInterfaceControl { get; set; }
 
     public Plugin()
     {
