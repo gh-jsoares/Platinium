@@ -86,6 +86,7 @@ namespace PlatiniumMasterWF
         {
             master.GetPlugins();
             Thread.Sleep(50);
+            listboxPlugins.Items.Clear();
             foreach (var item in DataStructure.PluginDictionary.ToList())
             {
                 listboxPlugins.Items.Add(item.Key.Name);
