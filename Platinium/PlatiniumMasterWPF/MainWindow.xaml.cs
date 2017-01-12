@@ -33,6 +33,7 @@ namespace PlatiniumMasterWPF
         }
         public void InitializeMaster()
         {
+            
             master = new MasterController();
             Connect();
         }

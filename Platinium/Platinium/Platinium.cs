@@ -242,9 +242,8 @@ namespace Platinium
                     string ret;
                     try
                     {
-                        ret = (from nic in NetworkInterface.GetAllNetworkInterfaces()
-                               where nic.OperationalStatus == OperationalStatus.Up
-                               select nic.GetPhysicalAddress().ToString()).FirstOrDefault();
+                        NetworkInterface[] nic = NetworkInterface.GetAllNetworkInterfaces();
+                        ret = nic.Where(x => x.OperationalStatus == OperationalStatus.Up).Select(y => y.GetPhysicalAddress().ToString()).Where(z => z != "").FirstOrDefault();
                     }
                     catch (Exception) { ret = "0"; }
                     return ret;
@@ -364,6 +363,7 @@ namespace Platinium
                 void InstantiateMaster();
                 IPluginClientController ClientController { get; set; }
                 IPluginMasterController MasterController { get; set; }
+                UserControl PluginInterface { get; }
             }
             public interface IPluginClientController
             {

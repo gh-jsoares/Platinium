@@ -3,6 +3,7 @@ using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
 using Platinium.Shared.Info;
 using Platinium.Shared.Plugin;
+using PluginTest;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,6 +21,10 @@ public class Plugin : IPlugin
     public string TEST = "OLA";
     public IPluginClientController ClientController { get; set; }
     public IPluginMasterController MasterController { get; set; }
+
+    private UserControl myInterface = new ctlMain();
+
+    public UserControl PluginInterface { get { return myInterface; } }
 
     public Plugin()
     {

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}</ProjectGuid>
+    <ProjectGuid>{EF6B16B9-6A03-4F56-8F36-790E8AB69D46}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PluginTest</RootNamespace>
-    <AssemblyName>PluginTest</AssemblyName>
+    <RootNamespace>PluginHost</RootNamespace>
+    <AssemblyName>PluginHost</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -31,10 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -43,25 +40,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
-    <Compile Include="ctlMain.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ctlMain.Designer.cs">
-      <DependentUpon>ctlMain.cs</DependentUpon>
-    </Compile>
+    <Compile Include="Global.cs" />
+    <Compile Include="PluginServices.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Platinium\Platinium.csproj">
-      <Project>{9AC9C29D-E25F-4004-AE8B-5759FC6D869E}</Project>
-      <Name>Platinium</Name>
+    <ProjectReference Include="..\PluginInterface\PluginInterface.csproj">
+      <Project>{bdd43ec5-c782-4170-8b0f-df1a1d77c958}</Project>
+      <Name>PluginInterface</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="ctlMain.resx">
-      <DependentUpon>ctlMain.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

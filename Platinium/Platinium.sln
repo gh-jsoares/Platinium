@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.MasterWF", "Plati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.Contracts", "Platinium.Contracts\Platinium.Contracts.csproj", "{0CBB00DC-5C65-4FE1-A974-95F4E517B737}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginInterface", "PluginInterface\PluginInterface.csproj", "{BDD43EC5-C782-4170-8B0F-DF1A1D77C958}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost", "PluginHost\PluginHost.csproj", "{EF6B16B9-6A03-4F56-8F36-790E8AB69D46}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +61,14 @@ Global
 		{0CBB00DC-5C65-4FE1-A974-95F4E517B737}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CBB00DC-5C65-4FE1-A974-95F4E517B737}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CBB00DC-5C65-4FE1-A974-95F4E517B737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDD43EC5-C782-4170-8B0F-DF1A1D77C958}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDD43EC5-C782-4170-8B0F-DF1A1D77C958}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDD43EC5-C782-4170-8B0F-DF1A1D77C958}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDD43EC5-C782-4170-8B0F-DF1A1D77C958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF6B16B9-6A03-4F56-8F36-790E8AB69D46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF6B16B9-6A03-4F56-8F36-790E8AB69D46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF6B16B9-6A03-4F56-8F36-790E8AB69D46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF6B16B9-6A03-4F56-8F36-790E8AB69D46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

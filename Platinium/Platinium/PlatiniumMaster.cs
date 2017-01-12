@@ -89,7 +89,7 @@ namespace Platinium
                     IsAdministrator = CFunctions.IsAdministrator(),
                     Language = CFunctions.GetCurrentCulture(),
                     AppNetVersion = CFunctions.GetAppNetVersion(),
-                    OSName = CFunctions.GetOSName()
+                    OSName = CFunctions.GetOSName(),
                 };
                 return ci;
             }
