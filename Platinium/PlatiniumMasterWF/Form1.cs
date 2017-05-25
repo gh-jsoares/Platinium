@@ -70,12 +70,18 @@ namespace PlatiniumMasterWF
             foreach (var item in data)
             {
 
-                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(delegate
+                textBox1.Invoke((MethodInvoker)delegate
                 {
-                    richTextBox.AppendText(item + "\u2028");
-                    richTextBox.SelectionStart = richTextBox.Text.Length;
-                    richTextBox.ScrollToCaret();
-                }));
+                    textBox1.AppendText(item + "\u2028" + Environment.NewLine);
+                    textBox1.SelectionStart = textBox1.Text.Length;
+                    textBox1.ScrollToCaret();
+                });
+                //Dispatcher.CurrentDispatcher.BeginInvoke(new Action(delegate
+                //{
+                  //  textBox1.AppendText(item + "\u2028");
+                    //textBox1.SelectionStart = textBox1.Text.Length;
+                   // textBox1.ScrollToCaret();
+                //}));
             }
         }
         private void Connect()
