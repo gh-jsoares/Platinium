@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium", "Platinium\Platinium.csproj", "{9AC9C29D-E25F-4004-AE8B-5759FC6D869E}"
 EndProject
@@ -10,8 +10,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.Client", "PlatiniumClient\Platinium.Client.csproj", "{8BDA63D2-EA9C-46B4-A748-9F67188409E6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.Master", "PlatiniumMaster\Platinium.Master.csproj", "{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.MasterWPF", "PlatiniumMasterWPF\Platinium.MasterWPF.csproj", "{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginTest", "PluginTest\PluginTest.csproj", "{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}"
 EndProject
@@ -45,10 +43,6 @@ Global
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91BB56E7-00CB-4D5E-BE4C-E3D094DBD302}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -1,5 +1,4 @@
 ﻿using Platinium.Shared.Data.Structures;
-using PlatiniumMasterWPF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
