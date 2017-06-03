@@ -196,7 +196,7 @@ namespace Platinium
                     Assembly assembly = Assembly.Load(assemblyData);
                     DataStructure.LoadedAssemblyList.Add(assembly);
                 }
-                Type pluginType = typeof(IPlugin);
+                Type pluginType = typeof(PluginImplementation);
                 ICollection<Type> pluginTypes = new List<Type>();
                 foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
                 {
@@ -215,7 +215,7 @@ namespace Platinium
                 }
                 foreach (Type type in pluginTypes)
                 {
-                    IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                    PluginImplementation plugin = (PluginImplementation)Activator.CreateInstance(type, this);
                     var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                     DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                     Console.WriteLine("* {0} LOADED", type.ToString());

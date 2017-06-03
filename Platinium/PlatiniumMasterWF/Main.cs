@@ -16,11 +16,11 @@ using System.Windows.Threading;
 
 namespace PlatiniumMasterWF
 {
-    public partial class Form1 : Form
+    public partial class Main : Form
     {
         private static MasterController master;
         private static int ReadLinesCount = 0;
-        public Form1()
+        public Main()
         {
             InitializeComponent();
             InitializeMaster();
@@ -77,19 +77,19 @@ namespace PlatiniumMasterWF
                 });
                 //Dispatcher.CurrentDispatcher.BeginInvoke(new Action(delegate
                 //{
-                  //  textBox1.AppendText(item + "\u2028");
-                    //textBox1.SelectionStart = textBox1.Text.Length;
-                   // textBox1.ScrollToCaret();
+                //  textBox1.AppendText(item + "\u2028");
+                //textBox1.SelectionStart = textBox1.Text.Length;
+                // textBox1.ScrollToCaret();
                 //}));
             }
         }
         private void Connect()
         {
-            master.Connect();
+            master.ExecuteMethod("Initialize");
         }
         private void GetPlugins()
         {
-            master.GetPlugins();
+            master.ExecuteMethod("GetPlugins");
             Thread.Sleep(50);
             listboxPlugins.Items.Clear();
             foreach (var item in DataStructure.PluginDictionary.ToList())
@@ -100,7 +100,7 @@ namespace PlatiniumMasterWF
         }
         private void GetClients()
         {
-            master.GetClientList();
+            master.ExecuteMethod("GetClients");
             Thread.Sleep(50);
             datagridClients.DataSource = DataStructure.ClientList;
             //datagridClients.Columns[]
@@ -113,6 +113,28 @@ namespace PlatiniumMasterWF
         private void button1_Click(object sender, EventArgs e)
         {
             GetPlugins();
+        }
+
+        private void listboxPlugins_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listboxPlugins.SelectedItem != null)
+            {
+                string pluginKey = listboxPlugins.SelectedItem.ToString();
+
+                var plugin = DataStructure.PluginDictionary.Where(x => x.Key.Name == pluginKey).First();
+
+                if (!panel1.Controls.Contains(plugin.Value.PluginInterface))
+                {
+                    panel1.Controls.Add(plugin.Value.PluginInterface);
+                    plugin.Value.PluginInterface.Dock = DockStyle.Fill;
+                    plugin.Value.PluginInterface.BringToFront();
+                }
+                else
+                {
+                    plugin.Value.PluginInterface.BringToFront();
+                }
+            }
+            
         }
     }
     //public static class RichTextBoxExtensions

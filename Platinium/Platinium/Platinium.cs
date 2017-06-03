@@ -31,6 +31,7 @@ using System.Windows.Threading;
 using System.IO.Compression;
 using Platinium.Shared.Data.Compression;
 using Platinium.Shared.Core;
+using Platinium.Entities;
 
 namespace Platinium
 {
@@ -356,22 +357,33 @@ namespace Platinium
             /// <summary>
             /// The IPlugin Interface.
             /// </summary>
-            public interface IPlugin
+            public class PluginImplementation
             {
-                void Action();
-                void InstantiateClient();
-                void InstantiateMaster();
-                IPluginClientController ClientController { get; set; }
-                IPluginMasterController MasterController { get; set; }
-                UserControl PluginInterface { get; }
+                public PluginClientController ClientController { get; set; }
+                public PluginMasterController MasterController { get; set; }
+                public UserControl PluginInterface { get; private set; }
+                public void InstantiateClient()
+                {
+                    ClientController = new PluginClientController();
+                }
+                public void InstantiateMaster()
+                {
+                    MasterController = new PluginMasterController();
+                }
             }
-            public interface IPluginClientController
+            public class PluginClientController
             {
-                Package Action(Package inPackage);
+                public virtual Package Action(Package inPackage)
+                {
+                    return null;
+                }
             }
-            public interface IPluginMasterController
+            public class PluginMasterController
             {
-                Package Action(Package inPackage);
+                public virtual Package Action(Package inPackage)
+                {
+                    return null;
+                }
             }
             public class Metadata : Attribute
             {
@@ -404,7 +416,7 @@ namespace Platinium
                         if (methodInfo != null)
                         {
                             ParameterInfo[] parameters = methodInfo.GetParameters();
-                            IPlugin pluginInstance = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault();
+                            PluginImplementation pluginInstance = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault();
 
                             if (parameters.Length == 0)
                             {
@@ -536,6 +548,11 @@ namespace Platinium
             {
                 public class PackageFactory
                 {
+                    public object Instance { get; set; }
+                    public PackageFactory(object instance)
+                    {
+                        Instance = instance;
+                    }
                     public static Package HandleServerPackages(Package inPackage)
                     {
                         Package returnPackage = new Package(null, null, PackageType.Response, inPackage.To, inPackage.From);
@@ -569,9 +586,9 @@ namespace Platinium
                         }
                         return returnPackage;
                     }
-                    public static Package HandleClientPackages(Package inPackage)
+                    public Package HandleClientPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, inPackage.To, new ClientInfo(BaseInfoType.Server));
+                        Package returnPackage = new Package(null, null, PackageType.Response, new ClientInfo(BaseInfoType.Server));
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -588,7 +605,7 @@ namespace Platinium
                                             Assembly assembly = Assembly.Load(assemblyData);
                                             DataStructure.LoadedAssemblyList.Add(assembly);
                                         }
-                                        Type pluginType = typeof(IPlugin);
+                                        Type pluginType = typeof(PluginImplementation);
                                         ICollection<Type> pluginTypes = new List<Type>();
                                         foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
                                         {
@@ -606,7 +623,7 @@ namespace Platinium
                                         }
                                         foreach (Type type in pluginTypes)
                                         {
-                                            IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                                            PluginImplementation plugin = (PluginImplementation)Activator.CreateInstance(type, Instance);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                                             DataStructure.PluginDictionary.Clear();
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
@@ -629,7 +646,7 @@ namespace Platinium
                         }
                         return returnPackage;
                     }
-                    public static Package HandleMasterPackages(Package inPackage)
+                    public Package HandleMasterPackages(Package inPackage)
                     {
                         Package returnPackage = inPackage;
                         switch (inPackage.PackageType)
@@ -648,7 +665,7 @@ namespace Platinium
                                             Assembly assembly = Assembly.Load(assemblyData);
                                             DataStructure.LoadedAssemblyList.Add(assembly);
                                         }
-                                        Type pluginType = typeof(IPlugin);
+                                        Type pluginType = typeof(PluginImplementation);
                                         ICollection<Type> pluginTypes = new List<Type>();
                                         foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
                                         {
@@ -666,13 +683,14 @@ namespace Platinium
                                         }
                                         foreach (Type type in pluginTypes)
                                         {
-                                            IPlugin plugin = (IPlugin)Activator.CreateInstance(type);
+                                            PluginImplementation plugin = (PluginImplementation)Activator.CreateInstance(type, Instance);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                                             MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
                                             DataStructure.PluginDictionary.Clear();
                                             DataStructure.PluginMethodDictionary.Clear();
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                                             DataStructure.PluginMethodDictionary.Add(pluginMetadata[0], methodInfo);
+                                            
                                             plugin.InstantiateMaster();
                                         }
                                         break;
@@ -712,12 +730,20 @@ namespace Platinium
                         From = from;
                         Content = obj;
                     }
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo from)
+                    public Package(string command, object obj, PackageType packagetype)
                     {
                         Command = command;
-                        From = from;
+                        From = DataStructure.Info;
                         Content = obj;
                         PackageType = packagetype;
+                    }
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo to)
+                    {
+                        Command = command;
+                        To = to;
+                        PackageType = packagetype;
+                        From = DataStructure.Info;
+                        Content = obj;
                     }
                 }
             }
@@ -765,10 +791,11 @@ namespace Platinium
                 {
                     public static List<ClientInfo> MasterList = new List<ClientInfo>();
                     public static List<ClientInfo> ClientList = new List<ClientInfo>();
-                    public static Dictionary<Metadata, IPlugin> PluginDictionary = new Dictionary<Metadata, IPlugin>();
+                    public static Dictionary<Metadata, PluginImplementation> PluginDictionary = new Dictionary<Metadata, PluginImplementation>();
                     public static Dictionary<Metadata, MethodInfo[]> PluginMethodDictionary = new Dictionary<Metadata, MethodInfo[]>();
                     public static List<byte[]> AssemblyRaw = new List<byte[]>();
                     public static List<Assembly> LoadedAssemblyList = new List<Assembly>();
+                    public static ClientInfo Info { get; set; }
                 }
             }
         }
