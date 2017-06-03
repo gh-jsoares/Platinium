@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Configuration;
 using Platinium.Shared.Data.Network;
+using Platinium.Shared.Data.Structures;
 
 namespace Platinium
 {
@@ -28,6 +29,7 @@ namespace Platinium
             private ClientInfo ClientInfo = BuildClientInfo();
             private TcpClient clientSocket = new TcpClient();
             private static bool isConnected = false;
+            private PackageFactory PFactory;
             public PlatiniumClient()
             {
                 Console.Title = "Platinium Beta Client";
@@ -43,6 +45,8 @@ namespace Platinium
                         {
                             clientSocket = new TcpClient();
                             clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
+                            PFactory = new PackageFactory(this);
+                            DataStructure.Info = ClientInfo;
                             Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server)));
                             Thread GetThread = new Thread(Get);
                             GetThread.Start();
@@ -78,7 +82,7 @@ namespace Platinium
                     catch (Exception) { isConnected = false; break; }
                     Console.WriteLine(package.Content.EmptyIfNull());
                     Console.WriteLine(package.PackageType.ToString());
-                    Write(PackageFactory.HandleClientPackages(package));
+                    Write(PFactory.HandleClientPackages(package));
                     Console.WriteLine("GET");
                 }
                 Thread.CurrentThread.Abort();

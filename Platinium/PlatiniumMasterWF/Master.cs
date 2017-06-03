@@ -51,6 +51,11 @@ namespace PlatiniumMasterWF
         {
             assembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().ToString()), "Platinium.dll"));
         }
+        public void ExecuteMethod(string method)
+        {
+            MethodInfo methodInfo = type.GetMethod(method);
+            methodInfo.Invoke(instance, null);
+        }
         public void GetPlugins()
         {
             MethodInfo methodInfo = type.GetMethod("GetPlugins");
@@ -59,11 +64,6 @@ namespace PlatiniumMasterWF
         public void GetClientList()
         {
             MethodInfo methodInfo = type.GetMethod("GetClients");
-            methodInfo.Invoke(instance, null);
-        }
-        public void Connect()
-        {
-            MethodInfo methodInfo = type.GetMethod("Initialize");
             methodInfo.Invoke(instance, null);
         }
     }

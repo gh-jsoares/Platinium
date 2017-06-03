@@ -7,6 +7,7 @@ using PluginTest;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using Platinium.Shared.Data.Network;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -16,46 +17,31 @@ using System.Windows.Forms;
 using System.Xml;
 
 [Metadata(Name = "TEST", Version = "1", Description = "Just a Test Plugin")]
-public class Plugin : IPlugin
+public class Plugin : PluginImplementation
 {
     public string TEST = "OLA";
-    public IPluginClientController ClientController { get; set; }
-    public IPluginMasterController MasterController { get; set; }
+    public new UserControl PluginInterface { get; set; }
 
-    private UserControl myInterface = new ctlMain();
+    public dynamic Interface { get; set; }
 
-    public UserControl PluginInterface { get { return myInterface; } }
-
-    public Plugin()
+    public Plugin(dynamic obj)
     {
-
-    }
-    public void Action()
-    {
-
-    }
-    public void InstantiateClient()
-    {
-        ClientController = new PluginClientSide();
-    }
-    public void InstantiateMaster()
-    {
-        MasterController = new PluginMasterSide();
+        Interface = obj;
+        PluginInterface = new ctlMain(this);
     }
 }
-public class PluginClientSide : IPluginClientController
+public class PluginClientSide : PluginClientController
 {
     public string TESTEST = "OLAOLA";
-    public Package Action(Package inPackage)
+    public override Package Action(Package inPackage)
     {
-        Package returnPackage = inPackage;
-        returnPackage = new Package("TEST|Action", "PLUGIN ACTION WORKING", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From);
+        Package returnPackage = new Package("TEST|Action", "PLUGIN ACTION WORKING", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From);
         return returnPackage;
     }
 }
-public class PluginMasterSide : IPluginMasterController
+public class PluginMasterSide : PluginMasterController
 {
-    public Package Action(Package inPackage)
+    public override Package Action(Package inPackage)
     {
         Package returnPackage = new Package("TEST|Action", "PLUGIN ACTION WORKING (PARSED AT MASTER)", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From);
         return returnPackage;
