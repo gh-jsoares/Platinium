@@ -23,8 +23,8 @@ namespace PlatiniumMasterWF
         public Form1()
         {
             InitializeComponent();
-            Watch();
             InitializeMaster();
+            Watch();
             GetClients();
         }
         private void Form1_Load(object sender, EventArgs e)
