@@ -373,6 +373,10 @@ namespace Platinium
             }
             public class PluginClientController
             {
+                public PluginClientController()
+                {
+
+                }
                 public virtual Package Action(Package inPackage)
                 {
                     return null;
@@ -380,6 +384,10 @@ namespace Platinium
             }
             public class PluginMasterController
             {
+                public PluginMasterController()
+                {
+
+                }
                 public virtual Package Action(Package inPackage)
                 {
                     return null;
@@ -658,6 +666,9 @@ namespace Platinium
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
+                                        DataStructure.LoadedAssemblyList.Clear();
+                                        DataStructure.PluginDictionary.Clear();
+                                        DataStructure.PluginMethodDictionary.Clear();
                                         DataStructure.AssemblyRaw = (List<byte[]>)inPackage.Content;
                                         Console.WriteLine("LOADED ASSEMBLIES");
                                         foreach (var assemblyData in DataStructure.AssemblyRaw)
@@ -669,16 +680,10 @@ namespace Platinium
                                         ICollection<Type> pluginTypes = new List<Type>();
                                         foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
                                         {
-                                            Type[] types = assembly.GetTypes();
-                                            foreach (Type type in types)
+                                            Type type = assembly.GetType("Plugin");
+                                            if (!type.IsInterface || !type.IsAbstract)
                                             {
-                                                if (!type.IsInterface || !type.IsAbstract)
-                                                {
-                                                    if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
-                                                    {
-                                                        pluginTypes.Add(type);
-                                                    }
-                                                }
+                                                pluginTypes.Add(type);
                                             }
                                         }
                                         foreach (Type type in pluginTypes)
@@ -686,11 +691,9 @@ namespace Platinium
                                             PluginImplementation plugin = (PluginImplementation)Activator.CreateInstance(type, Instance);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                                             MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                                            DataStructure.PluginDictionary.Clear();
-                                            DataStructure.PluginMethodDictionary.Clear();
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                                             DataStructure.PluginMethodDictionary.Add(pluginMetadata[0], methodInfo);
-                                            
+
                                             plugin.InstantiateMaster();
                                         }
                                         break;

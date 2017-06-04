@@ -27,6 +27,7 @@ namespace Platinium
             private static PackageFactory PFactory;
             public string FILE_LOG_PATH;
             private bool isConnected = false;
+            public bool Received = false;
             private static Logger logger = new Logger();
             public PlatiniumMaster()
             {
@@ -40,7 +41,7 @@ namespace Platinium
                     masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                     PFactory = new PackageFactory(this);
                     Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server)));
-                    Thread GetThread = new Thread(Get);
+                    Thread GetThread = new Thread(() => Get(HandlingCompleted));
                     GetThread.Start();
                     //Thread WriteThread = new Thread(Write);
                     //WriteThread.Start();
@@ -62,10 +63,11 @@ namespace Platinium
                 try
                 {
                     NetworkManagement.WriteData(masterSocket, package);
+                    Received = false;
                 }
                 catch (Exception) { isConnected = false; }
             }
-            private void Get()
+            private void Get(Action callback)
             {
                 while (true)
                 {
@@ -76,7 +78,12 @@ namespace Platinium
                     }
                     catch (Exception) { isConnected = false; MessageBox.Show("Unable to read data from the server"); break; }
                     package = PFactory.HandleMasterPackages(package);
+                    callback();
                 }
+            }
+            public void HandlingCompleted()
+            {
+                Received = true;
             }
             private static ClientInfo BuildMasterInfo()
             {

@@ -90,7 +90,7 @@ namespace PlatiniumMasterWF
         private void GetPlugins()
         {
             master.ExecuteMethod("GetPlugins");
-            Thread.Sleep(50);
+            while (!master.Received) { }
             listboxPlugins.Items.Clear();
             foreach (var item in DataStructure.PluginDictionary.ToList())
             {
@@ -100,8 +100,8 @@ namespace PlatiniumMasterWF
         }
         private void GetClients()
         {
+            
             master.ExecuteMethod("GetClients");
-            Thread.Sleep(50);
             datagridClients.DataSource = DataStructure.ClientList;
             //datagridClients.Columns[]
         }

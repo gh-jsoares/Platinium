@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PlatiniumMasterWF
@@ -19,6 +20,7 @@ namespace PlatiniumMasterWF
         private Assembly assembly;
         private Type type;
         private object instance;
+        public bool Received;
         public MasterController()
         {
             InitializeEnvironment();
@@ -30,6 +32,8 @@ namespace PlatiniumMasterWF
             FieldInfo field = type.GetField("FILE_LOG_PATH", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
             instance = Activator.CreateInstance(type);
             field.SetValue(instance, FILE_LOG_PATH);
+            Thread refreshFields = new Thread(refreshFieldsM);
+            refreshFields.Start();
         }
         private void InitializeEnvironment()
         {
@@ -50,6 +54,16 @@ namespace PlatiniumMasterWF
         private void StaticEnvironmentLoading()
         {
             assembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().ToString()), "Platinium.dll"));
+        }
+        private void refreshFieldsM()
+        {
+            while (true)
+            {
+                FieldInfo field = type.GetField("Received");
+                Received = (bool)field.GetValue(instance);
+                //Received = (bool)type.GetField("Received").GetValue(type);
+                Thread.Sleep(200);
+            }
         }
         public void ExecuteMethod(string method)
         {
