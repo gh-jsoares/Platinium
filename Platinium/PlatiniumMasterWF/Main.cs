@@ -90,7 +90,7 @@ namespace PlatiniumMasterWF
         private void GetPlugins()
         {
             master.ExecuteMethod("GetPlugins");
-            while (!master.Received) { }
+            Thread.Sleep(50);
             listboxPlugins.Items.Clear();
             foreach (var item in DataStructure.PluginDictionary.ToList())
             {

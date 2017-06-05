@@ -20,7 +20,7 @@ using System.Xml;
 public class Plugin : PluginImplementation
 {
     public string TEST = "OLA";
-    public new UserControl PluginInterface { get; set; }
+    public override UserControl PluginInterface { get; set; }
 
     public dynamic Interface { get; set; }
 

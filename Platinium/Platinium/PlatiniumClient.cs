@@ -82,6 +82,10 @@ namespace Platinium
                     catch (Exception) { isConnected = false; break; }
                     Console.WriteLine(package.Content.EmptyIfNull());
                     Console.WriteLine(package.PackageType.ToString());
+                    if (!DataStructure.PackageStatus.ContainsKey(package.ID))
+                    {
+                        DataStructure.PackageStatus.Add(package.ID, false);
+                    }
                     Write(PFactory.HandleClientPackages(package));
                     Console.WriteLine("GET");
                 }

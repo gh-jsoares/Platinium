@@ -361,7 +361,7 @@ namespace Platinium
             {
                 public PluginClientController ClientController { get; set; }
                 public PluginMasterController MasterController { get; set; }
-                public UserControl PluginInterface { get; private set; }
+                public virtual UserControl PluginInterface { get; set; }
                 public void InstantiateClient()
                 {
                     ClientController = new PluginClientController();
@@ -652,6 +652,10 @@ namespace Platinium
                             case PackageType.Response:
                                 break;
                         }
+                        if (DataStructure.PackageStatus.ContainsKey(returnPackage.ID))
+                        {
+                            DataStructure.PackageStatus[returnPackage.ID] = true;
+                        }
                         return returnPackage;
                     }
                     public Package HandleMasterPackages(Package inPackage)
@@ -714,12 +718,17 @@ namespace Platinium
                             case PackageType.Response:
                                 break;
                         }
+                        if (DataStructure.PackageStatus.ContainsKey(returnPackage.ID))
+                        {
+                            DataStructure.PackageStatus[returnPackage.ID] = true;
+                        }
                         return returnPackage;
                     }
                 }
                 [Serializable]
                 public class Package
                 {
+                    public string ID { get; private set; }
                     public ClientInfo To { get; private set; }
                     public ClientInfo From { get; private set; }
                     public string Command { get; private set; }
@@ -727,6 +736,7 @@ namespace Platinium
                     public PackageType PackageType { get; private set; }
                     public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to)
                     {
+                        ID = Guid.NewGuid().ToString("N");
                         Command = command;
                         To = to;
                         PackageType = packagetype;
@@ -735,6 +745,7 @@ namespace Platinium
                     }
                     public Package(string command, object obj, PackageType packagetype)
                     {
+                        ID = Guid.NewGuid().ToString("N");
                         Command = command;
                         From = DataStructure.Info;
                         Content = obj;
@@ -742,6 +753,7 @@ namespace Platinium
                     }
                     public Package(string command, object obj, PackageType packagetype, ClientInfo to)
                     {
+                        ID = Guid.NewGuid().ToString("N");
                         Command = command;
                         To = to;
                         PackageType = packagetype;
@@ -792,6 +804,7 @@ namespace Platinium
                 [Serializable]
                 public static class DataStructure
                 {
+                    public static Dictionary<string, bool> PackageStatus = new Dictionary<string, bool>();
                     public static List<ClientInfo> MasterList = new List<ClientInfo>();
                     public static List<ClientInfo> ClientList = new List<ClientInfo>();
                     public static Dictionary<Metadata, PluginImplementation> PluginDictionary = new Dictionary<Metadata, PluginImplementation>();

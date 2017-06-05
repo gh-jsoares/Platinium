@@ -3,6 +3,7 @@ using Platinium.Shared.Core;
 using Platinium.Shared.Data.Network;
 using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Data.Serialization;
+using Platinium.Shared.Data.Structures;
 using Platinium.Shared.Info;
 using System;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace Platinium
                     masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                     PFactory = new PackageFactory(this);
                     Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server)));
-                    Thread GetThread = new Thread(() => Get(HandlingCompleted));
+                    Thread GetThread = new Thread(Get);
                     GetThread.Start();
                     //Thread WriteThread = new Thread(Write);
                     //WriteThread.Start();
@@ -63,11 +64,14 @@ namespace Platinium
                 try
                 {
                     NetworkManagement.WriteData(masterSocket, package);
-                    Received = false;
+                    if (!DataStructure.PackageStatus.ContainsKey(package.ID))
+                    {
+                        DataStructure.PackageStatus.Add(package.ID, false);
+                    }
                 }
                 catch (Exception) { isConnected = false; }
             }
-            private void Get(Action callback)
+            private void Get()
             {
                 while (true)
                 {
@@ -78,12 +82,7 @@ namespace Platinium
                     }
                     catch (Exception) { isConnected = false; MessageBox.Show("Unable to read data from the server"); break; }
                     package = PFactory.HandleMasterPackages(package);
-                    callback();
                 }
-            }
-            public void HandlingCompleted()
-            {
-                Received = true;
             }
             private static ClientInfo BuildMasterInfo()
             {
