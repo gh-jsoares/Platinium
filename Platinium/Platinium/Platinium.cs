@@ -32,6 +32,7 @@ using System.IO.Compression;
 using Platinium.Shared.Data.Compression;
 using Platinium.Shared.Core;
 using Platinium.Entities;
+using Platinium.Shared.Security;
 
 namespace Platinium
 {
@@ -357,19 +358,13 @@ namespace Platinium
             /// <summary>
             /// The IPlugin Interface.
             /// </summary>
-            public class PluginImplementation
+            public interface IPluginImplementation
             {
-                public PluginClientController ClientController { get; set; }
-                public PluginMasterController MasterController { get; set; }
-                public virtual UserControl PluginInterface { get; set; }
-                public void InstantiateClient()
-                {
-                    ClientController = new PluginClientController();
-                }
-                public void InstantiateMaster()
-                {
-                    MasterController = new PluginMasterController();
-                }
+                PluginClientController ClientController { get; set; }
+                PluginMasterController MasterController { get; set; }
+                UserControl PluginInterface { get; set; }
+                void InstantiateClient();
+                void InstantiateMaster();
             }
             public class PluginClientController
             {
@@ -377,20 +372,13 @@ namespace Platinium
                 {
 
                 }
-                public virtual Package Action(Package inPackage)
-                {
-                    return null;
-                }
             }
             public class PluginMasterController
             {
-                public PluginMasterController()
+                public IPluginImplementation PluginInstance { get; set; }
+                public PluginMasterController(IPluginImplementation plugin)
                 {
-
-                }
-                public virtual Package Action(Package inPackage)
-                {
-                    return null;
+                    PluginInstance = plugin;
                 }
             }
             public class Metadata : Attribute
@@ -424,7 +412,7 @@ namespace Platinium
                         if (methodInfo != null)
                         {
                             ParameterInfo[] parameters = methodInfo.GetParameters();
-                            PluginImplementation pluginInstance = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault();
+                            IPluginImplementation pluginInstance = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault();
 
                             if (parameters.Length == 0)
                             {
@@ -512,7 +500,7 @@ namespace Platinium
                                 data.AddRange(buffer);
                             } while (networkStream.DataAvailable);
                         }
-                        return (Package)Serializer.Deserialize(Compressor.Decompress(data.ToArray()));
+                        return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
                     }
                     public static Package ReadData(TcpClient Socket, Logger logger)
                     {
@@ -529,11 +517,11 @@ namespace Platinium
                             } while (networkStream.DataAvailable);
                             logger.LogMessageToFile($"Data received. Size {totalBytesRead} bytes.");
                         }
-                        return (Package)Serializer.Deserialize(Compressor.Decompress(data.ToArray()));
+                        return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
                     }
                     public static void WriteData(TcpClient Socket, Package Package)
                     {
-                        byte[] data = Compressor.Compress(Serializer.Serialize(Package));
+                        byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
                         NetworkStream networkStream = Socket.GetStream();
                         if (networkStream.CanWrite)
                         {
@@ -542,7 +530,7 @@ namespace Platinium
                     }
                     public static void WriteData(TcpClient Socket, Package Package, Logger logger)
                     {
-                        byte[] data = Compressor.Compress(Serializer.Serialize(Package));
+                        byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
                         NetworkStream networkStream = Socket.GetStream();
                         if (networkStream.CanWrite)
                         {
@@ -563,7 +551,7 @@ namespace Platinium
                     }
                     public static Package HandleServerPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, inPackage.To, inPackage.From);
+                        Package returnPackage = new Package(null, null, PackageType.Response, inPackage.To, inPackage.From, inPackage.ID);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -573,10 +561,10 @@ namespace Platinium
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
-                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyRaw, PackageType.Data, inPackage.To, inPackage.From);
+                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyRaw, PackageType.Data, inPackage.To, inPackage.From, inPackage.ID);
                                         break;
                                     case "CLIENT_LIST":
-                                        returnPackage = new Package("CLIENT_LIST", DataStructure.ClientList, PackageType.Data, inPackage.To, inPackage.From);
+                                        returnPackage = new Package("CLIENT_LIST", DataStructure.ClientList, PackageType.Data, inPackage.To, inPackage.From, inPackage.ID);
                                         break;
                                     default:
                                         break;
@@ -596,7 +584,7 @@ namespace Platinium
                     }
                     public Package HandleClientPackages(Package inPackage)
                     {
-                        Package returnPackage = new Package(null, null, PackageType.Response, new ClientInfo(BaseInfoType.Server));
+                        Package returnPackage = new Package(null, null, PackageType.Response, DataStructure.Info, new ClientInfo(BaseInfoType.Server), inPackage.ID);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -613,25 +601,19 @@ namespace Platinium
                                             Assembly assembly = Assembly.Load(assemblyData);
                                             DataStructure.LoadedAssemblyList.Add(assembly);
                                         }
-                                        Type pluginType = typeof(PluginImplementation);
+                                        Type pluginType = typeof(IPluginImplementation);
                                         ICollection<Type> pluginTypes = new List<Type>();
                                         foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
                                         {
-                                            Type[] types = assembly.GetTypes();
-                                            foreach (Type type in types)
+                                            Type type = assembly.GetType("Plugin");
+                                            if (!type.IsInterface || !type.IsAbstract)
                                             {
-                                                if (!type.IsInterface || !type.IsAbstract)
-                                                {
-                                                    if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
-                                                    {
-                                                        pluginTypes.Add(type);
-                                                    }
-                                                }
+                                                pluginTypes.Add(type);
                                             }
                                         }
                                         foreach (Type type in pluginTypes)
                                         {
-                                            PluginImplementation plugin = (PluginImplementation)Activator.CreateInstance(type, Instance);
+                                            IPluginImplementation plugin = (IPluginImplementation)Activator.CreateInstance(type, Instance);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                                             DataStructure.PluginDictionary.Clear();
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
@@ -680,7 +662,7 @@ namespace Platinium
                                             Assembly assembly = Assembly.Load(assemblyData);
                                             DataStructure.LoadedAssemblyList.Add(assembly);
                                         }
-                                        Type pluginType = typeof(PluginImplementation);
+                                        Type pluginType = typeof(IPluginImplementation);
                                         ICollection<Type> pluginTypes = new List<Type>();
                                         foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
                                         {
@@ -692,7 +674,7 @@ namespace Platinium
                                         }
                                         foreach (Type type in pluginTypes)
                                         {
-                                            PluginImplementation plugin = (PluginImplementation)Activator.CreateInstance(type, Instance);
+                                            IPluginImplementation plugin = (IPluginImplementation)Activator.CreateInstance(type, Instance);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                                             MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
@@ -734,26 +716,47 @@ namespace Platinium
                     public string Command { get; private set; }
                     public object Content { get; private set; }
                     public PackageType PackageType { get; private set; }
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to)
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to, string Id)
                     {
-                        ID = Guid.NewGuid().ToString("N");
+                        if (Id == null)
+                        {
+                            ID = Guid.NewGuid().ToString("N");
+                        }
+                        else
+                        {
+                            ID = Id;
+                        }
                         Command = command;
                         To = to;
                         PackageType = packagetype;
                         From = from;
                         Content = obj;
                     }
-                    public Package(string command, object obj, PackageType packagetype)
+                    public Package(string command, object obj, PackageType packagetype, string Id)
                     {
-                        ID = Guid.NewGuid().ToString("N");
+                        if (Id == null)
+                        {
+                            ID = Guid.NewGuid().ToString("N");
+                        }
+                        else
+                        {
+                            ID = Id;
+                        }
                         Command = command;
                         From = DataStructure.Info;
                         Content = obj;
                         PackageType = packagetype;
                     }
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo to)
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo to, string Id)
                     {
-                        ID = Guid.NewGuid().ToString("N");
+                        if (Id == null)
+                        {
+                            ID = Guid.NewGuid().ToString("N");
+                        }
+                        else
+                        {
+                            ID = Id;
+                        }
                         Command = command;
                         To = to;
                         PackageType = packagetype;
@@ -807,11 +810,14 @@ namespace Platinium
                     public static Dictionary<string, bool> PackageStatus = new Dictionary<string, bool>();
                     public static List<ClientInfo> MasterList = new List<ClientInfo>();
                     public static List<ClientInfo> ClientList = new List<ClientInfo>();
-                    public static Dictionary<Metadata, PluginImplementation> PluginDictionary = new Dictionary<Metadata, PluginImplementation>();
+                    public static Dictionary<Metadata, IPluginImplementation> PluginDictionary = new Dictionary<Metadata, IPluginImplementation>();
                     public static Dictionary<Metadata, MethodInfo[]> PluginMethodDictionary = new Dictionary<Metadata, MethodInfo[]>();
                     public static List<byte[]> AssemblyRaw = new List<byte[]>();
                     public static List<Assembly> LoadedAssemblyList = new List<Assembly>();
                     public static ClientInfo Info { get; set; }
+                    public static byte[] ServerKey { get; set; } = { 0x03, 0xd3, 0x65, 0x64, 0xa7, 0x75, 0x02, 0x76, 0xe0, 0x37, 0xb9, 0xf4, 0x46, 0x3a, 0x3d, 0xd9,
+                                                                     0x07, 0x17, 0x79, 0x88, 0x97, 0x6d, 0xc8, 0x4a, 0xe4, 0x97, 0xac, 0x88, 0xb9, 0x2b, 0x62, 0xdb };
+                    public static byte[] ServerIV { get; set; } = { 0x01, 0x5f, 0x16, 0x1a, 0x3b, 0x0c, 0x0f, 0x75, 0x80, 0xb1, 0x0d, 0x0f, 0xdb, 0x2d, 0xdf, 0x56 };
                 }
             }
         }
@@ -837,6 +843,8 @@ namespace Platinium
                 public double AppVersion { get; private set; }
                 public string AppNetVersion { get; set; }
                 public bool IsConnected { get; set; } = false;
+                public byte[] Key { get; set; }
+                public byte[] IV { get; set; }
 
                 public BaseInfoType Type { get; set; }
                 [NonSerialized]
@@ -845,23 +853,35 @@ namespace Platinium
                 public ClientInfo()
                 {
                     AppVersion = 1.0;
+                    GenerateKeyAndIV();
                 }
                 public ClientInfo(string uid, BaseInfoType type)
                 {
                     AppVersion = 1.0;
                     UID = uid;
                     Type = type;
+                    GenerateKeyAndIV();
                 }
                 public ClientInfo(string uid)
                 {
                     AppVersion = 1.0;
                     UID = uid;
                     Type = BaseInfoType.Client;
+                    GenerateKeyAndIV();
                 }
                 public ClientInfo(BaseInfoType type)
                 {
                     AppVersion = 1.0;
                     Type = type;
+                    GenerateKeyAndIV();
+                }
+                private void GenerateKeyAndIV()
+                {
+                    AesManaged aes = new AesManaged();
+                    aes.GenerateKey();
+                    aes.GenerateIV();
+                    Key = aes.Key;
+                    IV = aes.IV;
                 }
                 private IEnumerable<object> Info()
                 {
@@ -884,6 +904,38 @@ namespace Platinium
                 IEnumerator IEnumerable.GetEnumerator()
                 {
                     return GetEnumerator();
+                }
+            }
+        }
+        namespace Security
+        {
+            public class Encryption
+            {
+                public static byte[] Decrypt(byte[] data, byte[] key, byte[] iv)
+                {
+                    MemoryStream ms = new MemoryStream();
+                    Rijndael alg = Rijndael.Create();
+                    alg.Key = key;
+                    alg.IV = iv;
+                    CryptoStream cs = new CryptoStream(ms,
+                    alg.CreateDecryptor(), CryptoStreamMode.Write);
+                    cs.Write(data, 0, data.Length);
+                    cs.Close();
+                    byte[] decryptedData = ms.ToArray();
+                    return decryptedData;
+                }
+                public static byte[] Encrypt(byte[] data, byte[] key, byte[] iv)
+                {
+                    MemoryStream ms = new MemoryStream();
+                    Rijndael alg = Rijndael.Create();
+                    alg.Key = key;
+                    alg.IV = iv;
+                    CryptoStream cs = new CryptoStream(ms,
+                    alg.CreateEncryptor(), CryptoStreamMode.Write);
+                    cs.Write(data, 0, data.Length);
+                    cs.Close();
+                    byte[] encryptedData = ms.ToArray();
+                    return encryptedData;
                 }
             }
         }

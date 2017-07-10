@@ -47,7 +47,7 @@ namespace Platinium
                             clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                             PFactory = new PackageFactory(this);
                             DataStructure.Info = ClientInfo;
-                            Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server)));
+                            Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server), null));
                             Thread GetThread = new Thread(Get);
                             GetThread.Start();
                             LoadPlugins();
@@ -60,7 +60,7 @@ namespace Platinium
             private void LoadPlugins()
             {
                 Console.WriteLine("DOWNLOADING PLUGINS");
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Data, ClientInfo, new ClientInfo(BaseInfoType.Server)));
+                Write(new Package("LOAD_PLUGINS", null, PackageType.Data, ClientInfo, new ClientInfo(BaseInfoType.Server), null));
             }
             private void Write(Package package)
             {

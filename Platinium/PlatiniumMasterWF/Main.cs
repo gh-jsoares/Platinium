@@ -20,6 +20,7 @@ namespace PlatiniumMasterWF
     {
         private static MasterController master;
         private static int ReadLinesCount = 0;
+        private static int Timeout = 60;
         public Main()
         {
             InitializeComponent();
@@ -85,25 +86,30 @@ namespace PlatiniumMasterWF
         }
         private void Connect()
         {
-            master.ExecuteMethod("Initialize");
+            var id = master.ExecuteMethod("Initialize");
         }
         private void GetPlugins()
         {
-            master.ExecuteMethod("GetPlugins");
-            Thread.Sleep(50);
-            listboxPlugins.Items.Clear();
-            foreach (var item in DataStructure.PluginDictionary.ToList())
+            var id = master.ExecuteMethod("GetPlugins");
+            var task = Task.Run(() => checkForMessageIdStatus(id));
+            if (task.Wait(TimeSpan.FromSeconds(Timeout)))
             {
-                listboxPlugins.Items.Add(item.Key.Name);
+                listboxPlugins.Items.Clear();
+                foreach (var item in DataStructure.PluginDictionary.ToList())
+                {
+                    listboxPlugins.Items.Add(item.Key.Name);
+                }
             }
-            //listboxPlugins.DataSource = DataStructure.PluginDictionary.Select(x => x.Key.Name);
         }
         private void GetClients()
         {
             
-            master.ExecuteMethod("GetClients");
-            datagridClients.DataSource = DataStructure.ClientList;
-            //datagridClients.Columns[]
+            var id = master.ExecuteMethod("GetClients");
+            var task = Task.Run(() => checkForMessageIdStatus(id));
+            if (task.Wait(TimeSpan.FromSeconds(Timeout)))
+            {
+                datagridClients.DataSource = DataStructure.ClientList;
+            }
         }
         private void buttonGetClients_Click(object sender, EventArgs e)
         {
@@ -135,6 +141,10 @@ namespace PlatiniumMasterWF
                 }
             }
             
+        }
+        private void checkForMessageIdStatus(string id)
+        {
+            while (!DataStructure.PackageStatus[id]) { }
         }
     }
     //public static class RichTextBoxExtensions

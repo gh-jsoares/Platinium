@@ -123,10 +123,12 @@ namespace Platinium
         {
             public IPEndPoint IPEndPoint { get; private set; }
             public IPEndPoint HearthBeatIPEndPoint { get; private set; }
+            private ClientInfo ServerInfo = BuildServerInfo();
             public PlatiniumServer()
             {
                 Console.Title = "Platinium Beta Server";
                 LoadPlugins();
+                DataStructure.Info = ServerInfo;
                 IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
                 HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
                 Thread hearthBeatTask = new Thread(HearthBeat);
@@ -196,7 +198,7 @@ namespace Platinium
                     Assembly assembly = Assembly.Load(assemblyData);
                     DataStructure.LoadedAssemblyList.Add(assembly);
                 }
-                Type pluginType = typeof(PluginImplementation);
+                Type pluginType = typeof(IPluginImplementation);
                 ICollection<Type> pluginTypes = new List<Type>();
                 foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
                 {
@@ -215,7 +217,7 @@ namespace Platinium
                 }
                 foreach (Type type in pluginTypes)
                 {
-                    PluginImplementation plugin = (PluginImplementation)Activator.CreateInstance(type, this);
+                    IPluginImplementation plugin = (IPluginImplementation)Activator.CreateInstance(type, this);
                     var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                     DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                     Console.WriteLine("* {0} LOADED", type.ToString());
@@ -275,6 +277,15 @@ namespace Platinium
                     }
                     catch (Exception) { }
                 }
+            }
+            private static ClientInfo BuildServerInfo()
+            {
+                ClientInfo ci = new ClientInfo
+                {
+                    UserName = "SERVER",
+                    Type = BaseInfoType.Server
+                };
+                return ci;
             }
         }
     }

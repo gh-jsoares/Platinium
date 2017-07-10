@@ -41,7 +41,8 @@ namespace Platinium
                     logger.Path = FILE_LOG_PATH;
                     masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                     PFactory = new PackageFactory(this);
-                    Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server)));
+                    DataStructure.Info = MasterInfo;
+                    Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
                     Thread GetThread = new Thread(Get);
                     GetThread.Start();
                     //Thread WriteThread = new Thread(Write);
@@ -51,15 +52,15 @@ namespace Platinium
                 }
                 catch (Exception) { }
             }
-            public void GetPlugins()
+            public string GetPlugins()
             {
-                Write(new Package("LOAD_PLUGINS", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server)));
+                return Write(new Package("LOAD_PLUGINS", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
             }
-            public void GetClients()
+            public string GetClients()
             {
-                Write(new Package("CLIENT_LIST", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server)));
+                return Write(new Package("CLIENT_LIST", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
             }
-            private void Write(Package package)
+            private string Write(Package package)
             {
                 try
                 {
@@ -68,8 +69,10 @@ namespace Platinium
                     {
                         DataStructure.PackageStatus.Add(package.ID, false);
                     }
+                    return package.ID;
                 }
                 catch (Exception) { isConnected = false; }
+                return null;
             }
             private void Get()
             {

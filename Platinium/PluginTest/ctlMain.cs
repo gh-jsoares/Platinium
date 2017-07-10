@@ -20,7 +20,7 @@ namespace PluginTest
         public static ctlMain Instance { get; set; }
 
         public Plugin Plugin { get; set; }
-        
+
         public ctlMain(Plugin plugin)
         {
             InitializeComponent();
@@ -31,7 +31,17 @@ namespace PluginTest
         private void button1_Click(object sender, EventArgs e)
         {
             var s = (PlatiniumMaster)Plugin.Interface;
-            NetworkManagement.WriteData(s.masterSocket, new Package("TEST|Action", null, PackageType.PluginCommand, new ClientInfo("2")));
+            NetworkManagement.WriteData(s.masterSocket, new Package("TEST|Action", null, PackageType.PluginCommand, new ClientInfo("7AAA-7FEC-C5F6-D623-462C-DCD6-DA5A-070A"), null));
+        }
+        public void SetLabelValue(string value)
+        {
+            if (label1.InvokeRequired)
+            {
+                label1.Invoke(new MethodInvoker(delegate
+                {
+                    label1.Text = value;
+                }));
+            }
         }
     }
 }
