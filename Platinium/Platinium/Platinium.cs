@@ -4,34 +4,27 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading.Tasks;
 using System.Collections;
 using System.Net;
 using System.Runtime.Serialization;
 using Platinium.Shared.Plugin;
 using Platinium.Shared.Data.Structures;
-using System.Threading;
 using Platinium.Shared.Content;
 using System.Reflection;
 using System.Management;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Net.NetworkInformation;
-using System.DirectoryServices.AccountManagement;
 using System.Globalization;
 using Platinium.Connection;
 using Platinium.Shared.Data.Serialization;
 using System.Windows.Forms;
-using System.Windows.Threading;
 using System.IO.Compression;
 using Platinium.Shared.Data.Compression;
 using Platinium.Shared.Core;
-using Platinium.Entities;
 using Platinium.Shared.Security;
 
 namespace Platinium
@@ -594,6 +587,7 @@ namespace Platinium
                                 switch (inPackage.Command)
                                 {
                                     case "LOAD_PLUGINS":
+                                        DataStructure.PluginDictionary.Clear();
                                         DataStructure.AssemblyRaw = (List<byte[]>)inPackage.Content;
                                         Console.WriteLine("LOADED ASSEMBLIES");
                                         foreach (var assemblyData in DataStructure.AssemblyRaw)
@@ -615,7 +609,6 @@ namespace Platinium
                                         {
                                             IPluginImplementation plugin = (IPluginImplementation)Activator.CreateInstance(type, Instance);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
-                                            DataStructure.PluginDictionary.Clear();
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
                                             plugin.InstantiateClient();
                                         }
