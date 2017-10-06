@@ -43,7 +43,7 @@ namespace Platinium
                         Package package = NetworkManagement.ReadData(ClientSocket);
                         if (package.From != null)
                         {
-                            Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From Type - {2}\n* From - {3}\n* To Type - {4}\n* To - {5}\n*************** END GET ***************", package.PackageType.ToString().EmptyIfNull(), package.Content.EmptyIfNull(), package.From.Type.EmptyIfNull(), package.From.UID.EmptyIfNull(), package.To.Type.EmptyIfNull(), package.To.UID.EmptyIfNull());
+                            Console.WriteLine("*************** GET PACKAGE ***************\n* Type - {0}\n* Value - {1}\n* From Type - {2}\n* From - {3}\n* To Type - {4}\n* To - {5}\n*************** END GET ***************", package.PackageType.ToString().NULLIfNull(), package.Content.NULLIfNull(), package.From.Type.NULLIfNull(), package.From.UID.NULLIfNull(), package.To.Type.NULLIfNull(), package.To.UID.NULLIfNull());
                         }
                         else
                         {
@@ -168,7 +168,7 @@ namespace Platinium
                     }
                     if (DataStructure.ClientList.Any(x => x.UID == Info.UID && x.IsConnected == false) || DataStructure.MasterList.Any(x => x.UID == Info.UID && x.IsConnected == false))
                     {
-                        Dictionary<string, object> ddata = Converter.ClassToDictionary(Info);
+                        Dictionary<string, object> ddata = Converter.ObjectToDictionary(Info);
                         foreach (var item in ddata)
                         {
                             Console.WriteLine("* {0} - {1}", item.Key, item.Value);

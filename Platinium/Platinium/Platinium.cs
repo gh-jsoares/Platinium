@@ -33,15 +33,28 @@ namespace Platinium
     {
         namespace Core
         {
+            /// <summary>
+            /// Provides some conversion methods.
+            /// </summary>
             public partial class Converter
             {
-                public static Dictionary<string, object> ClassToDictionary(object objectToConvert)
+                /// <summary>
+                /// Converts an object to a dictionary.
+                /// </summary>
+                /// <param name="objectToConvert">The object to convert.</param>
+                /// <returns>Dictionary with key type string and value type object.</returns>
+                public static Dictionary<string, object> ObjectToDictionary(object objectToConvert)
                 {
                     return objectToConvert.GetType()
                          .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                          .ToDictionary(prop => prop.Name, prop => prop.GetValue(objectToConvert, null));
                 }
-                public static List<Dictionary<string, object>> ClassToDictionaryList(List<object> objectListToConvert)
+                /// <summary>
+                /// Converts an object list to a dictionary list.
+                /// </summary>
+                /// <param name="objectListToConvert">The object list to convert</param>
+                /// <returns>Dictionary List with key type string and value type object.</returns>
+                public static List<Dictionary<string, object>> ObjectListToDictionaryList(List<object> objectListToConvert)
                 {
                     List<Dictionary<string, object>> tempList = new List<Dictionary<string, object>>();
                     foreach (object objectToConvert in objectListToConvert)
@@ -53,9 +66,17 @@ namespace Platinium
                     return tempList;
                 }
             }
+            /// <summary>
+            /// Provides some extensions.
+            /// </summary>
             public static class Extensions
             {
-                public static string EmptyIfNull(this object value)
+                /// <summary>
+                /// Returns the a string with the value "NULL" if the object is type null.
+                /// </summary>
+                /// <param name="value">The object to check if is null.</param>
+                /// <returns>String with value "NULL" or a string of the parameter "value".</returns>
+                public static string NULLIfNull(this object value)
                 {
                     if (value == null)
                     {
@@ -64,6 +85,9 @@ namespace Platinium
                     return value.ToString();
                 }
             }
+            /// <summary>
+            /// Generates a unique fingerprint for the device.
+            /// </summary>
             public class FingerPrint
             {
                 private static string fingerPrint = string.Empty;
@@ -105,8 +129,7 @@ namespace Platinium
                     return s;
                 }
                 #region Original Device ID Getting Code
-                private static string identifier
-                (string wmiClass, string wmiProperty, string wmiMustBeTrue)
+                private static string identifier(string wmiClass, string wmiProperty, string wmiMustBeTrue)
                 {
                     string result = "";
                     ManagementClass mc =
@@ -207,8 +230,15 @@ namespace Platinium
                 }
                 #endregion
             }
-            public class CFunctions
+            /// <summary>
+            /// Contains methods to get the current device information.
+            /// </summary>
+            public class DeviceInfo
             {
+                /// <summary>
+                /// Checks if the currently logged user has administrative permissions.
+                /// </summary>
+                /// <returns></returns>
                 public static bool IsAdministrator()
                 {
                     bool ret;
@@ -221,6 +251,10 @@ namespace Platinium
                     catch (Exception) { ret = false; }
                     return ret;
                 }
+                /// <summary>
+                /// Gets the device public IP.
+                /// </summary>
+                /// <returns></returns>
                 public static string GetPublicIP()
                 {
                     string ret;
@@ -232,6 +266,10 @@ namespace Platinium
                     catch (Exception) { ret = "0.0.0.0"; }
                     return ret;
                 }
+                /// <summary>
+                /// Gets the device MAC Address.
+                /// </summary>
+                /// <returns></returns>
                 public static string GetMacAddress()
                 {
                     string ret;
@@ -243,6 +281,10 @@ namespace Platinium
                     catch (Exception) { ret = "0"; }
                     return ret;
                 }
+                /// <summary>
+                /// Gets the currently logged user.
+                /// </summary>
+                /// <returns>The name of the user.</returns>
                 public static string GetCurrentLoggedUser()
                 {
                     string ret;
@@ -253,6 +295,10 @@ namespace Platinium
                     catch (Exception) { ret = "0"; }
                     return ret;
                 }
+                /// <summary>
+                /// Gets the device name.
+                /// </summary>
+                /// <returns></returns>
                 public static string GetComputerName()
                 {
                     string ret;
@@ -263,6 +309,10 @@ namespace Platinium
                     catch (Exception) { ret = "0"; }
                     return ret;
                 }
+                /// <summary>
+                /// Gets the current device culture.
+                /// </summary>
+                /// <returns>The two letter ISO code.</returns>
                 public static string GetCurrentCulture()
                 {
                     string ret;
@@ -273,6 +323,10 @@ namespace Platinium
                     catch (Exception) { ret = "0"; }
                     return ret;
                 }
+                /// <summary>
+                /// Gets the .NET version installed (System.Core).
+                /// </summary>
+                /// <returns></returns>
                 public static string GetAppNetVersion()
                 {
                     string ret;
@@ -283,6 +337,10 @@ namespace Platinium
                     catch (Exception) { ret = "0"; }
                     return ret;
                 }
+                /// <summary>
+                /// Gets the OS name.
+                /// </summary>
+                /// <returns></returns>
                 public static string GetOSName()
                 {
                     string ret;
@@ -295,13 +353,23 @@ namespace Platinium
                     return ret != null ? ret.ToString() : "Unknown";
                 }
             }
+            /// <summary>
+            /// Logs all incoming and outcoming data.
+            /// </summary>
             public class Logger
             {
+                /// <summary>
+                /// Path of the file.
+                /// </summary>
                 public string Path { get; set; }
                 public Logger()
                 {
 
                 }
+                /// <summary>
+                /// Logs a message to the file.
+                /// </summary>
+                /// <param name="message">The message to log.</param>
                 public void LogMessageToFile(string message)
                 {
                     StreamWriter sw = File.AppendText(Path);
@@ -314,6 +382,9 @@ namespace Platinium
                     finally { sw.Close(); }
                 }
             }
+            /// <summary>
+            /// Under construction...
+            /// </summary>
             public enum LogLevel
             {
                 Network,
@@ -321,6 +392,9 @@ namespace Platinium
         }
         namespace Content
         {
+            /// <summary>
+            /// The type of package.
+            /// </summary>
             public enum PackageType
             {
                 Base,
@@ -330,15 +404,32 @@ namespace Platinium
                 NoResponse,
                 Response
             }
+            /// <summary>
+            /// Under construction...
+            /// </summary>
             [Serializable]
             public class Command
             {
+                /// <summary>
+                /// Under construction...
+                /// </summary>
                 public string Type { get; set; }
+                /// <summary>
+                /// Under construction...
+                /// </summary>
                 public string CommandContent { get; set; }
+                /// <summary>
+                /// Under construction...
+                /// </summary>
                 public Command()
                 {
 
                 }
+                /// <summary>
+                /// Under construction...
+                /// </summary>
+                /// <param name="type"></param>
+                /// <param name="command"></param>
                 public Command(string type, string command)
                 {
                     Type = type;
@@ -353,11 +444,25 @@ namespace Platinium
             /// </summary>
             public interface IPluginImplementation
             {
-
+                /// <summary>
+                /// Contains the Client side controls.
+                /// </summary>
                 PluginClientController ClientController { get; set; }
+                /// <summary>
+                /// Contains the Master side controls.
+                /// </summary>
                 PluginMasterController MasterController { get; set; }
+                /// <summary>
+                /// Contains the GUI.
+                /// </summary>
                 UserControl PluginInterface { get; set; }
+                /// <summary>
+                /// Instantiates the Client side controller.
+                /// </summary>
                 void InstantiateClient();
+                /// <summary>
+                /// Instantiates the Master side controller.
+                /// </summary>
                 void InstantiateMaster();
             }
             public class PluginClientController
@@ -375,14 +480,35 @@ namespace Platinium
                     PluginInstance = plugin;
                 }
             }
+            /// <summary>
+            /// The Plugin metadata.
+            /// </summary>
             public class Metadata : Attribute
             {
+                /// <summary>
+                /// Name of the Plugin.
+                /// </summary>
                 public string Name { get; set; }
+                /// <summary>
+                /// Version of the Plugin.
+                /// </summary>
                 public string Version { get; set; }
+                /// <summary>
+                /// Description of the Plugin.
+                /// </summary>
                 public string Description { get; set; }
             }
+            /// <summary>
+            /// Creates the Packages on the Plugin.
+            /// </summary>
             public partial class PluginFactory
             {
+                /// <summary>
+                /// Generates the Package on the Plugin.
+                /// </summary>
+                /// <param name="inPackage">Package received.</param>
+                /// <param name="baseInfoType">The type of instance.</param>
+                /// <returns>The generated package.</returns>
                 public static Package HandlePluginMethods(Package inPackage, BaseInfoType baseInfoType)
                 {
                     Package returnPackage = inPackage;
@@ -440,8 +566,16 @@ namespace Platinium
         {
             namespace Compression
             {
+                /// <summary>
+                /// Contains methods to compress and decompress data.
+                /// </summary>
                 public class Compressor
                 {
+                    /// <summary>
+                    /// Compresses data.
+                    /// </summary>
+                    /// <param name="raw">The data in an array of bytes to compress.</param>
+                    /// <returns>The compressed array of bytes.</returns>
                     public static byte[] Compress(byte[] raw)
                     {
                         using (MemoryStream ms = new MemoryStream())
@@ -453,6 +587,11 @@ namespace Platinium
                             return ms.ToArray();
                         }
                     }
+                    /// <summary>
+                    /// Decompresses data.
+                    /// </summary>
+                    /// <param name="cgzip">The data in an array of bytes to decompress.</param>
+                    /// <returns>The decompressed array of bytes.</returns>
                     public static byte[] Decompress(byte[] cgzip)
                     {
                         using (GZipStream gzip = new GZipStream(new MemoryStream(cgzip), CompressionMode.Decompress))
@@ -535,14 +674,25 @@ namespace Platinium
                 }
             }
             namespace Packages
-            {
+            {   
+                /// <summary>
+                /// Creates the Packages for the Client, Master and Server.
+                /// </summary>
                 public class PackageFactory
                 {
+                    /// <summary>
+                    /// It's the current instance running. It can be the Server, Client and Master.
+                    /// </summary>
                     public object Instance { get; set; }
                     public PackageFactory(object instance)
                     {
                         Instance = instance;
                     }
+                    /// <summary>
+                    /// Generates the Package on the Server.
+                    /// </summary>
+                    /// <param name="inPackage">Package received.</param>
+                    /// <returns>The generated package.</returns>
                     public static Package HandleServerPackages(Package inPackage)
                     {
                         Package returnPackage = new Package(null, null, PackageType.Response, inPackage.To, inPackage.From, inPackage.ID);
@@ -576,6 +726,11 @@ namespace Platinium
                         }
                         return returnPackage;
                     }
+                    /// <summary>
+                    /// Generates the Package on the Client.
+                    /// </summary>
+                    /// <param name="inPackage">Package received.</param>
+                    /// <returns>The generated package.</returns>
                     public Package HandleClientPackages(Package inPackage)
                     {
                         Package returnPackage = new Package(null, null, PackageType.Response, DataStructure.Info, new ClientInfo(BaseInfoType.Server), inPackage.ID);
@@ -634,6 +789,11 @@ namespace Platinium
                         }
                         return returnPackage;
                     }
+                    /// <summary>
+                    /// Generates the Package on the Master.
+                    /// </summary>
+                    /// <param name="inPackage">Package received.</param>
+                    /// <returns>The generated package.</returns>
                     public Package HandleMasterPackages(Package inPackage)
                     {
                         Package returnPackage = new Package(null, null, PackageType.Response, DataStructure.Info, new ClientInfo(BaseInfoType.Server), inPackage.ID);
@@ -701,17 +861,51 @@ namespace Platinium
                         return returnPackage;
                     }
                 }
+                /// <summary>
+                /// The Package is the class that gets serialized and is used to communicate between the client, master and server.
+                /// </summary>
                 [Serializable]
                 public class Package
                 {
+                    /// <summary>
+                    /// The Package ID.
+                    /// </summary>
                     public string ID { get; private set; }
+                    /// <summary>
+                    /// To whom to send the Package.
+                    /// </summary>
                     public ClientInfo To { get; private set; }
+                    /// <summary>
+                    /// From whom the Package is sent.
+                    /// </summary>
                     public ClientInfo From { get; private set; }
+                    /// <summary>
+                    /// The command.
+                    /// </summary>
                     public string Command { get; private set; }
+                    /// <summary>
+                    /// The content of the package.
+                    /// </summary>
                     public object Content { get; private set; }
+                    /// <summary>
+                    /// The type of package.
+                    /// </summary>
                     public PackageType PackageType { get; private set; }
+                    /// <summary>
+                    /// Callback flag.
+                    /// </summary>
                     public bool Callback { get; private set; }
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to, string Id)
+                    /// <summary>
+                    /// Creates a Package with a command, content, package type, from client info, to client info, and the Package ID.
+                    /// If the Id is null, or not defined, it generates a new one for this Package.
+                    /// </summary>
+                    /// <param name="command">The command.</param>
+                    /// <param name="obj">The content of the package.</param>
+                    /// <param name="packagetype">The type of package.</param>
+                    /// <param name="from">From whom the Package is sent.</param>
+                    /// <param name="to">To whom the Package is sent.</param>
+                    /// <param name="Id">The Package ID. If null, it's generated a new one.</param>
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to, string Id = null)
                     {
                         if (Id == null)
                         {
@@ -727,7 +921,16 @@ namespace Platinium
                         From = from;
                         Content = obj;
                     }
-                    public Package(string command, object obj, PackageType packagetype, string Id)
+                    /// <summary>
+                    /// Creates a Package with a command, content, package type, and the Package ID.
+                    /// If the Id is null, or not defined, it generates a new one for this Package.
+                    /// The From property is picked from the DataStructure.Info object, that contains the current instance info.
+                    /// </summary>
+                    /// <param name="command">The command.</param>
+                    /// <param name="obj">The content of the package.</param>
+                    /// <param name="packagetype">The type of package.</param>
+                    /// <param name="Id">The Package ID. If null, it's generated a new one.</param>
+                    public Package(string command, object obj, PackageType packagetype, string Id = null)
                     {
                         if (Id == null)
                         {
@@ -742,7 +945,17 @@ namespace Platinium
                         Content = obj;
                         PackageType = packagetype;
                     }
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo to, string Id)
+                    /// <summary>
+                    /// Creates a package with a command, content, package type, to client info, and the Package ID.
+                    /// If the Id is null, or not defined, it generates a new one for this Package.
+                    /// The From property is picked from the DataStructure.Info object, that contains the current instance info.
+                    /// </summary>
+                    /// <param name="command">The command.</param>
+                    /// <param name="obj">The content of the package.</param>
+                    /// <param name="packagetype">The type of package.</param>
+                    /// <param name="to">To whom the Package is sent.</param>
+                    /// <param name="Id">The Package ID. If null, it's generated a new one.</param>
+                    public Package(string command, object obj, PackageType packagetype, ClientInfo to, string Id = null)
                     {
                         if (Id == null)
                         {
@@ -773,8 +986,16 @@ namespace Platinium
                         return typeToDeserialize;
                     }
                 }
+                /// <summary>
+                /// Contains the methods to serialize and deserialize data.
+                /// </summary>
                 public class Serializer
                 {
+                    /// <summary>
+                    /// Serializes a given object.
+                    /// </summary>
+                    /// <param name="objToSerialize">The object to serialize.</param>
+                    /// <returns>The object's byte array.</returns>
                     public static byte[] Serialize(object objToSerialize)
                     {
                         using (var memoryStream = new MemoryStream())
@@ -785,6 +1006,11 @@ namespace Platinium
                             return memoryStream.ToArray();
                         }
                     }
+                    /// <summary>
+                    /// Deserializes a given byte array.
+                    /// </summary>
+                    /// <param name="data">The byte array to deserialize.</param>
+                    /// <returns>The result object of the deserialization.</returns>
                     public static object Deserialize(byte[] data)
                     {
                         using (var memoryStream = new MemoryStream(data))
@@ -799,31 +1025,70 @@ namespace Platinium
             }
             namespace Structures
             {
+                /// <summary>
+                /// Contains global structures, dictionaries and lists.
+                /// </summary>
                 [Serializable]
                 public static class DataStructure
                 {
+                    /// <summary>
+                    /// Sets whether a package with the given ID has already been received or not.
+                    /// </summary>
                     public static Dictionary<string, bool> PackageStatus = new Dictionary<string, bool>();
+                    /// <summary>
+                    /// The list of connected Masters.
+                    /// </summary>
                     public static List<ClientInfo> MasterList = new List<ClientInfo>();
+                    /// <summary>
+                    /// The list of connected Clients.
+                    /// </summary>
                     public static List<ClientInfo> ClientList = new List<ClientInfo>();
+                    /// <summary>
+                    /// The dictionary that contains the plugin Metadata and it's instance.
+                    /// </summary>
                     public static Dictionary<Metadata, IPluginImplementation> PluginDictionary = new Dictionary<Metadata, IPluginImplementation>();
+                    /// <summary>
+                    /// The dictionary that contains the plugin Metadata and it's methods.
+                    /// </summary>
                     public static Dictionary<Metadata, MethodInfo[]> PluginMethodDictionary = new Dictionary<Metadata, MethodInfo[]>();
+                    /// <summary>
+                    /// A list of raw assemblies. These are not yet loaded.
+                    /// </summary>
                     public static List<byte[]> AssemblyRaw = new List<byte[]>();
+                    /// <summary>
+                    /// The list of all loaded assemblies.
+                    /// </summary>
                     public static List<Assembly> LoadedAssemblyList = new List<Assembly>();
+                    /// <summary>
+                    /// The current instance information. Global between Servers, Clients and Masters.
+                    /// </summary>
                     public static ClientInfo Info { get; set; }
+                    /// <summary>
+                    /// Under construction...
+                    /// </summary>
                     public static byte[] ServerKey { get; set; } = { 0x03, 0xd3, 0x65, 0x64, 0xa7, 0x75, 0x02, 0x76, 0xe0, 0x37, 0xb9, 0xf4, 0x46, 0x3a, 0x3d, 0xd9,
                                                                      0x07, 0x17, 0x79, 0x88, 0x97, 0x6d, 0xc8, 0x4a, 0xe4, 0x97, 0xac, 0x88, 0xb9, 0x2b, 0x62, 0xdb };
+                    /// <summary>
+                    /// Under construction...
+                    /// </summary>
                     public static byte[] ServerIV { get; set; } = { 0x01, 0x5f, 0x16, 0x1a, 0x3b, 0x0c, 0x0f, 0x75, 0x80, 0xb1, 0x0d, 0x0f, 0xdb, 0x2d, 0xdf, 0x56 };
                 }
             }
         }
         namespace Info
         {
+            /// <summary>
+            /// The type of instance.
+            /// </summary>
             public enum BaseInfoType
             {
                 Client,
                 Master,
                 Server
             }
+            /// <summary>
+            /// Contains important info of the current instance (device).
+            /// </summary>
             [Serializable]
             public class ClientInfo : IEnumerable<object>
             {
@@ -904,8 +1169,18 @@ namespace Platinium
         }
         namespace Security
         {
+            /// <summary>
+            /// Contains the encryption and decryption functions.
+            /// </summary>
             public class Encryption
             {
+                /// <summary>
+                /// Encrypts a given array of bytes using a key and a initialization vector.
+                /// </summary>
+                /// <param name="data">The array of bytes to encrypt.</param>
+                /// <param name="key">The key.</param>
+                /// <param name="iv">The initialization vector.</param>
+                /// <returns>The encrypted byte array.</returns>
                 public static byte[] Decrypt(byte[] data, byte[] key, byte[] iv)
                 {
                     MemoryStream ms = new MemoryStream();
@@ -919,6 +1194,13 @@ namespace Platinium
                     byte[] decryptedData = ms.ToArray();
                     return decryptedData;
                 }
+                /// <summary>
+                /// Decrypts a given array of bytes using a key and a initialization vector,
+                /// </summary>
+                /// <param name="data">The array of bytes to decrypt.</param>
+                /// <param name="key">The key.</param>
+                /// <param name="iv">The initialization vector.</param>
+                /// <returns>The decrypted byte array.</returns>
                 public static byte[] Encrypt(byte[] data, byte[] key, byte[] iv)
                 {
                     MemoryStream ms = new MemoryStream();

@@ -91,16 +91,16 @@ namespace Platinium
             {
                 ClientInfo ci = new ClientInfo
                 {
-                    IP = CFunctions.GetPublicIP(),
-                    MACAddress = CFunctions.GetMacAddress(),
+                    IP = DeviceInfo.GetPublicIP(),
+                    MACAddress = DeviceInfo.GetMacAddress(),
                     UserName = "MASTER",
-                    ComputerName = CFunctions.GetComputerName(),
+                    ComputerName = DeviceInfo.GetComputerName(),
                     UID = FingerPrint.Value(),
                     Type = BaseInfoType.Master,
-                    IsAdministrator = CFunctions.IsAdministrator(),
-                    Language = CFunctions.GetCurrentCulture(),
-                    AppNetVersion = CFunctions.GetAppNetVersion(),
-                    OSName = CFunctions.GetOSName(),
+                    IsAdministrator = DeviceInfo.IsAdministrator(),
+                    Language = DeviceInfo.GetCurrentCulture(),
+                    AppNetVersion = DeviceInfo.GetAppNetVersion(),
+                    OSName = DeviceInfo.GetOSName(),
                 };
                 return ci;
             }
