@@ -370,16 +370,18 @@ namespace Platinium
                 /// Logs a message to the file.
                 /// </summary>
                 /// <param name="message">The message to log.</param>
-                public void LogMessageToFile(string message)
+                public string LogMessageToFile(string message)
                 {
                     StreamWriter sw = File.AppendText(Path);
+                    string logLine = message;
                     try
                     {
-                        string logLine = String.Format("[{0:G}]: {1}", DateTime.Now, message);
+                        logLine = String.Format("[{0:G}]: {1}", DateTime.Now, message);
                         sw.WriteLine(logLine);
                     }
                     catch (Exception) { }
                     finally { sw.Close(); }
+                    return logLine;
                 }
             }
             /// <summary>

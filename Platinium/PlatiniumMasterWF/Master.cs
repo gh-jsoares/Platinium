@@ -15,7 +15,7 @@ namespace PlatiniumMasterWF
         private static string DLL_URL = "http://repositorio123.esy.es/Platinium.css";
         private static string ROOT_PATH = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Platinium");
         public static string LOG_PATH = Path.Combine(ROOT_PATH, "log");
-        public static string FILE_LOG_PATH = Path.Combine(LOG_PATH, "log_" + DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".log");
+        public static string FILE_LOG_PATH = Path.Combine(LOG_PATH, "log_master_" + DateTime.Now.ToString("yyyyMMdd_hhmmss") + ".log");
         private byte[] raw_assembly;
         private Assembly assembly;
         private Type type;

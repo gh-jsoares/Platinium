@@ -45,9 +45,6 @@ namespace Platinium
                     Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
                     Thread GetThread = new Thread(Get);
                     GetThread.Start();
-                    //Thread WriteThread = new Thread(Write);
-                    //WriteThread.Start();
-                    //Write(new Package("TEST|Action", null, PackageType.PluginCommand, MasterInfo, new ClientInfo("2")));
                     isConnected = true;
                 }
                 catch (Exception) { }
