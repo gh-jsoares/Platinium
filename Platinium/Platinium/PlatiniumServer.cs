@@ -210,7 +210,6 @@ namespace Platinium
                             if ((type.GetInterface(pluginType.FullName) != null) && (!type.IsInterface || !type.IsAbstract))
                             {
                                 pluginTypes.Add(type);
-                                Console.WriteLine("* PLUGIN: {0}", type.ToString());
                             }
                         }
                     }
@@ -220,7 +219,7 @@ namespace Platinium
                     IPluginImplementation plugin = (IPluginImplementation)Activator.CreateInstance(type, this);
                     var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
                     DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
-                    Console.WriteLine("* {0} LOADED", type.ToString());
+                    Console.WriteLine("* PLUGIN {0} LOADED", pluginMetadata[0].Name);
                 }
                 Console.WriteLine("*************** FINNISHED LOADING PLUGINS ***************");
             }

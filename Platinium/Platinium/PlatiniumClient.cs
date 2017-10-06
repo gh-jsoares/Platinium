@@ -86,7 +86,8 @@ namespace Platinium
                     {
                         DataStructure.PackageStatus.Add(package.ID, false);
                     }
-                    Write(PFactory.HandleClientPackages(package));
+                    Package responsePackage = PFactory.HandleClientPackages(package);
+                    Write(responsePackage);
                     Console.WriteLine("GET");
                 }
                 Thread.CurrentThread.Abort();

@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.Client", "Platini
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.Master", "PlatiniumMaster\Platinium.Master.csproj", "{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginTest", "PluginTest\PluginTest.csproj", "{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.MasterWF", "PlatiniumMasterWF\Platinium.MasterWF.csproj", "{4E3785C9-D35E-4CFD-9162-7323289ACF8B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Platinium.Contracts", "Platinium.Contracts\Platinium.Contracts.csproj", "{0CBB00DC-5C65-4FE1-A974-95F4E517B737}"
@@ -45,10 +43,6 @@ Global
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A4FE851-9857-45D9-AACA-B3EF2831AA9F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D778D9AE-CD0A-4243-AECC-4A0381FFCF96}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4E3785C9-D35E-4CFD-9162-7323289ACF8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4E3785C9-D35E-4CFD-9162-7323289ACF8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E3785C9-D35E-4CFD-9162-7323289ACF8B}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -64,7 +64,7 @@ public class PluginMasterSide : PluginMasterController
     {
         var interfaceMain = (ctlMain)PluginInstance.PluginInterface;
         interfaceMain.SetPictureboxImage((byte[])inPackage.Content);
-        Package returnPackage = new Package("Screenshot|Action", "PLUGIN ACTION WORKING (PARSED AT MASTER)", Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From, null);
+        Package returnPackage = new Package("Screenshot|Action", null, Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From, null);
         return returnPackage;
     }
 }

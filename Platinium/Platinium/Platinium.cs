@@ -353,6 +353,7 @@ namespace Platinium
             /// </summary>
             public interface IPluginImplementation
             {
+
                 PluginClientController ClientController { get; set; }
                 PluginMasterController MasterController { get; set; }
                 UserControl PluginInterface { get; set; }
@@ -635,7 +636,7 @@ namespace Platinium
                     }
                     public Package HandleMasterPackages(Package inPackage)
                     {
-                        Package returnPackage = inPackage;
+                        Package returnPackage = new Package(null, null, PackageType.Response, DataStructure.Info, new ClientInfo(BaseInfoType.Server), inPackage.ID);
                         switch (inPackage.PackageType)
                         {
                             case PackageType.Base:
@@ -709,6 +710,7 @@ namespace Platinium
                     public string Command { get; private set; }
                     public object Content { get; private set; }
                     public PackageType PackageType { get; private set; }
+                    public bool Callback { get; private set; }
                     public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to, string Id)
                     {
                         if (Id == null)
