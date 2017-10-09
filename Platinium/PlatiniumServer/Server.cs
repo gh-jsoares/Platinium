@@ -34,7 +34,8 @@ namespace PlatiniumServer
             FieldInfo field = type.GetField("FILE_LOG_PATH", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
             instance = Activator.CreateInstance(type);
             field.SetValue(instance, FILE_LOG_PATH);
-
+            MethodInfo methodInfo = type.GetMethod("Initialize");
+            methodInfo.Invoke(instance, null);
         }
         private void InitializeEnvironment()
         {

@@ -26,6 +26,7 @@ using System.IO.Compression;
 using Platinium.Shared.Data.Compression;
 using Platinium.Shared.Core;
 using Platinium.Shared.Security;
+using System.Threading;
 
 namespace Platinium
 {
@@ -362,6 +363,7 @@ namespace Platinium
                 /// Path of the file.
                 /// </summary>
                 public string Path { get; set; }
+                private ReaderWriterLockSlim lock_ = new ReaderWriterLockSlim();
                 public Logger()
                 {
 
@@ -372,15 +374,19 @@ namespace Platinium
                 /// <param name="message">The message to log.</param>
                 public string LogMessageToFile(string message)
                 {
-                    StreamWriter sw = File.AppendText(Path);
+                    lock_.EnterWriteLock();
                     string logLine = message;
                     try
                     {
-                        logLine = String.Format("[{0:G}]: {1}", DateTime.Now, message);
-                        sw.WriteLine(logLine);
+                        using (StreamWriter sw = new StreamWriter(Path, true))
+                        {
+
+                            logLine = String.Format("[{0:G}]: {1}", DateTime.Now, message);
+                            sw.WriteLine(logLine);
+                        }
                     }
-                    catch (Exception) { }
-                    finally { sw.Close(); }
+                    catch (Exception) { lock_.ExitWriteLock(); }
+                    finally { lock_.ExitWriteLock(); }
                     return logLine;
                 }
             }
@@ -676,7 +682,7 @@ namespace Platinium
                 }
             }
             namespace Packages
-            {   
+            {
                 /// <summary>
                 /// Creates the Packages for the Client, Master and Server.
                 /// </summary>

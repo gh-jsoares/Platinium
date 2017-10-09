@@ -41,22 +41,22 @@ namespace PlatiniumMasterWF
         {
             var watch = new FileSystemWatcher();
             watch.Path = MasterController.LOG_PATH;
-            watch.Filter = Path.GetFileName(MasterController.FILE_LOG_PATH);
+            watch.Filter = Path.GetFileName(MasterController.LOG_PATH);
             watch.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite;
             watch.Changed += new FileSystemEventHandler(OnChanged);
             watch.EnableRaisingEvents = true;
         }
         private void OnChanged(object source, FileSystemEventArgs e)
         {
-            if (File.Exists(MasterController.FILE_LOG_PATH))
+            if (File.Exists(MasterController.LOG_PATH))
             {
-                if (e.FullPath == MasterController.FILE_LOG_PATH)
+                if (e.FullPath == MasterController.LOG_PATH)
                 {
                     try
                     {
-                        int totalLines = File.ReadAllLines(MasterController.FILE_LOG_PATH).Count();
+                        int totalLines = File.ReadAllLines(MasterController.LOG_PATH).Count();
                         int newLinesCount = totalLines - ReadLinesCount;
-                        string[] data = File.ReadAllLines(MasterController.FILE_LOG_PATH).Skip(ReadLinesCount).Take(newLinesCount).ToArray();
+                        string[] data = File.ReadAllLines(MasterController.LOG_PATH).Skip(ReadLinesCount).Take(newLinesCount).ToArray();
                         UpdateTextBox(data);
                         ReadLinesCount = totalLines;
                     }

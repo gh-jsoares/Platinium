@@ -25,13 +25,14 @@ namespace Platinium
         [Serializable]
         public class Connector
         {
-            private Logger logger = new Logger();
+            private static  Logger _logger = new Logger();
             public TcpClient ClientSocket { get; private set; }
             private static NetworkStream networkStream = default(NetworkStream);
             public void StartConnection(TcpClient inClientSocket, Logger logger)
             {
                 ClientSocket = inClientSocket;
-                this.logger = logger;
+                
+                _logger = logger;
                 Thread handleThread = new Thread(handleConnection);
                 handleThread.Name = "HANDLETHREAD";
                 handleThread.Start();
@@ -45,11 +46,11 @@ namespace Platinium
                         Package package = NetworkManagement.ReadData(ClientSocket);
                         if (package.From != null)
                         {
-                            Console.WriteLine(logger.LogMessageToFile($"*************** GET PACKAGE ***************\n* Type - {package.PackageType.ToString().NULLIfNull()}\n* Value - {package.Content.NULLIfNull()}\n* From Type - {package.From.Type.NULLIfNull()}\n* From - {package.From.UID.NULLIfNull()}\n* To Type - {package.To.Type.NULLIfNull()}\n* To - {package.To.UID.NULLIfNull()}\n*************** END GET ***************"));
+                            Console.WriteLine(_logger.LogMessageToFile($"*************** GET PACKAGE ***************\n* Type - {package.PackageType.ToString().NULLIfNull()}\n* Value - {package.Content.NULLIfNull()}\n* From Type - {package.From.Type.NULLIfNull()}\n* From - {package.From.UID.NULLIfNull()}\n* To Type - {package.To.Type.NULLIfNull()}\n* To - {package.To.UID.NULLIfNull()}\n*************** END GET ***************"));
                         }
                         else
                         {
-                            Console.WriteLine(logger.LogMessageToFile($"*************** GET PACKAGE ***************\n* Type - {package.PackageType}"));
+                            Console.WriteLine(_logger.LogMessageToFile($"*************** GET PACKAGE ***************\n* Type - {package.PackageType}"));
                         }
                         Communicate(package);
                     }
@@ -67,7 +68,7 @@ namespace Platinium
                             {
                                 if (package.PackageType != PackageType.Response)
                                 {
-                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
                                 }
                             }
                         }
@@ -79,7 +80,7 @@ namespace Platinium
                             {
                                 if (package.PackageType != PackageType.Response)
                                 {
-                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
                                 }
                             }
                         }
@@ -95,7 +96,7 @@ namespace Platinium
                                     {
                                         if (package.PackageType != PackageType.Response)
                                         {
-                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
                                         }
                                     }
                                 }
@@ -108,7 +109,7 @@ namespace Platinium
                                     {
                                         if (package.PackageType != PackageType.Response)
                                         {
-                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package));
+                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
                                         }
                                     }
                                 }
@@ -132,17 +133,25 @@ namespace Platinium
             public PlatiniumServer()
             {
                 Console.Title = "Platinium Beta Server";
-                logger.Path = FILE_LOG_PATH;
-                LoadPlugins();
-                DataStructure.Info = ServerInfo;
-                IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
-                HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
-                Thread hearthBeatTask = new Thread(HearthBeat);
-                Thread clientConnection = new Thread(CheckClientConnection);
-                Thread masterConnection = new Thread(CheckMasterConnection);
-                clientConnection.Start();
-                masterConnection.Start();
-                Listen();
+                
+            }
+            public void Initialize()
+            {
+                try
+                {
+                    logger.Path = FILE_LOG_PATH;
+                    LoadPlugins();
+                    DataStructure.Info = ServerInfo;
+                    IPEndPoint = new IPEndPoint(IPAddress.Any, 55555);
+                    HearthBeatIPEndPoint = new IPEndPoint(IPAddress.Any, 55554);
+                    Thread hearthBeatTask = new Thread(HearthBeat);
+                    Thread clientConnection = new Thread(CheckClientConnection);
+                    Thread masterConnection = new Thread(CheckMasterConnection);
+                    clientConnection.Start();
+                    masterConnection.Start();
+                    Listen();
+                }
+                catch (Exception ex) { logger.LogMessageToFile($"FATAL EXCEPTION: {ex.Message}"); }
             }
             private void Listen()
             {
@@ -162,6 +171,10 @@ namespace Platinium
                             Console.WriteLine(logger.LogMessageToFile($"*************** AUTHENTICATED ***************"));
                             DataStructure.ClientList.Add(Info);
                         }
+                        else
+                        {
+                            Console.WriteLine(logger.LogMessageToFile($"************ BAD AUTHENTICATION ************"));
+                        }
                     }
                     else if (Info.Type == BaseInfoType.Master)
                     {
@@ -170,6 +183,10 @@ namespace Platinium
                         {
                             Console.WriteLine(logger.LogMessageToFile($"*************** AUTHENTICATED ***************"));
                             DataStructure.MasterList.Add(Info);
+                        }
+                        else
+                        {
+                            Console.WriteLine(logger.LogMessageToFile($"************ BAD AUTHENTICATION ************"));
                         }
                     }
                     if (DataStructure.ClientList.Any(x => x.UID == Info.UID && x.IsConnected == false) || DataStructure.MasterList.Any(x => x.UID == Info.UID && x.IsConnected == false))
@@ -245,6 +262,7 @@ namespace Platinium
             {
                 while (true)
                 {
+                    Thread.Sleep(20);
                     try
                     {
                         foreach (var client in DataStructure.ClientList)
@@ -252,23 +270,30 @@ namespace Platinium
                             TcpClient testTcp = client.Connector.ClientSocket;
                             if (!testTcp.Connected)
                             {
-                                client.IsConnected = false;
-                                logger.LogMessageToFile($"Changed Client {client.UserName} status to disconnected.");
+                                if (client.IsConnected)
+                                {
+                                    client.IsConnected = false;
+                                    logger.LogMessageToFile($"Changed Client {client.UserName} status to disconnected.");
+                                }
                             }
                             else
                             {
-                                client.IsConnected = true;
-                                logger.LogMessageToFile($"Changed Master {client.UserName} status to connected.");
+                                if (!client.IsConnected)
+                                {
+                                    client.IsConnected = true;
+                                    logger.LogMessageToFile($"Changed Master {client.UserName} status to connected.");
+                                }
                             }
                         }
                     }
-                    catch (Exception) { }
+                    catch (Exception ex) { logger.LogMessageToFile($"EXCEPTION: {ex.Message}"); }
                 }
             }
             private void CheckMasterConnection()
             {
                 while (true)
                 {
+                    Thread.Sleep(20);
                     try
                     {
                         foreach (var master in DataStructure.MasterList)
@@ -276,17 +301,23 @@ namespace Platinium
                             TcpClient testTcp = master.Connector.ClientSocket;
                             if (!testTcp.Connected)
                             {
-                                master.IsConnected = false;
-                                logger.LogMessageToFile($"Changed Master {master.UserName} status to disconnected.");
+                                if (master.IsConnected)
+                                {
+                                    master.IsConnected = false;
+                                    logger.LogMessageToFile($"Changed Master {master.UserName} status to disconnected.");
+                                }
                             }
                             else
                             {
-                                master.IsConnected = true;
-                                logger.LogMessageToFile($"Changed Master {master.UserName} status to connected.");
+                                if (!master.IsConnected)
+                                {
+                                    master.IsConnected = true;
+                                    logger.LogMessageToFile($"Changed Master {master.UserName} status to connected.");
+                                }
                             }
                         }
                     }
-                    catch (Exception) { }
+                    catch (Exception ex) { logger.LogMessageToFile($"EXCEPTION: {ex.Message}"); }
                 }
             }
             private static ClientInfo BuildServerInfo()

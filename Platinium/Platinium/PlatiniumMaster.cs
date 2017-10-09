@@ -61,14 +61,14 @@ namespace Platinium
             {
                 try
                 {
-                    NetworkManagement.WriteData(masterSocket, package);
+                    NetworkManagement.WriteData(masterSocket, package, logger);
                     if (!DataStructure.PackageStatus.ContainsKey(package.ID))
                     {
                         DataStructure.PackageStatus.Add(package.ID, false);
                     }
                     return package.ID;
                 }
-                catch (Exception) { isConnected = false; }
+                catch (Exception ex) { isConnected = false; logger.LogMessageToFile($"FATAL EXCEPTION: {ex.Message}"); }
                 return null;
             }
             private void Get()
@@ -80,7 +80,7 @@ namespace Platinium
                     {
                         package = NetworkManagement.ReadData(masterSocket, logger);
                     }
-                    catch (Exception) { isConnected = false; MessageBox.Show("Unable to read data from the server"); break; }
+                    catch (Exception ex) { isConnected = false; logger.LogMessageToFile($"FATAL EXCEPTION: {ex.Message}"); break; }
                     package = PFactory.HandleMasterPackages(package);
                 }
             }
