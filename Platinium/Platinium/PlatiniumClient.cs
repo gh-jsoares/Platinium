@@ -28,6 +28,7 @@ namespace Platinium
         {
             private ClientInfo ClientInfo = BuildClientInfo();
             private TcpClient clientSocket = new TcpClient();
+            private NetworkStream networkStream;
             private static bool isConnected = false;
             private PackageFactory PFactory;
             public PlatiniumClient()
@@ -45,6 +46,7 @@ namespace Platinium
                         {
                             clientSocket = new TcpClient();
                             clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
+                            networkStream = clientSocket.GetStream();
                             PFactory = new PackageFactory(this);
                             DataStructure.Info = ClientInfo;
                             Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server), null));
@@ -66,7 +68,7 @@ namespace Platinium
             {
                 try
                 {
-                    NetworkManagement.WriteData(clientSocket, package);
+                    NetworkManagement.WriteData(networkStream, package);
                 }
                 catch (Exception) { isConnected = false; }
             }
@@ -77,14 +79,14 @@ namespace Platinium
                     Package package;
                     try
                     {
-                        package = NetworkManagement.ReadData(clientSocket);
+                        package = NetworkManagement.ReadData(networkStream);
                     }
                     catch (Exception) { isConnected = false; break; }
                     Console.WriteLine(package.Content.NULLIfNull());
                     Console.WriteLine(package.PackageType.ToString());
                     if (!DataStructure.PackageStatus.ContainsKey(package.ID))
                     {
-                        DataStructure.PackageStatus.Add(package.ID, false);
+                        DataStructure.PackageStatus.Add(package.ID, PackageStatus.NotProcessed);
                     }
                     Package responsePackage = PFactory.HandleClientPackages(package);
                     Write(responsePackage);

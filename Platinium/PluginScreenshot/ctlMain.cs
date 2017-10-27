@@ -13,6 +13,7 @@ using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Content;
 using Platinium.Shared.Info;
 using System.IO;
+using System.Drawing.Imaging;
 
 namespace PluginScreenshot
 {
@@ -29,7 +30,7 @@ namespace PluginScreenshot
         private void button1_Click(object sender, EventArgs e)
         {
             var s = (PlatiniumMaster)Plugin.Interface;
-            NetworkManagement.WriteData(s.masterSocket, new Package("Screenshot|Action", null, PackageType.PluginCommand, new ClientInfo("7AAA-7FEC-C5F6-D623-462C-DCD6-DA5A-070A"), null));
+            NetworkManagement.WriteData(s.networkStream, new Package("Screenshot|Action", null, PackageType.PluginCommand, new ClientInfo("7AAA-7FEC-C5F6-D623-462C-DCD6-DA5A-070A"), null));
         }
         public void SetPictureboxImage(byte[] imgData)
         {
@@ -43,10 +44,16 @@ namespace PluginScreenshot
                         bmp = new Bitmap(ms);
                     }
 
+                    bmp.Save(Path.GetRandomFileName());
                     pictureBox1.Image = bmp;
                     pictureBox1.Refresh();
                 }));
             }
+        }
+
+        private void buttonSaveScreenshot_Click(object sender, EventArgs e)
+        {
+            pictureBox1.Image.Save($"{DateTime.Now.ToString("yyyyMMddHHmmssffff")}.png", ImageFormat.Png);
         }
     }
 }

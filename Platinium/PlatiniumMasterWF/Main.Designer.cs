@@ -42,7 +42,7 @@
             this.listboxPlugins.FormattingEnabled = true;
             this.listboxPlugins.Location = new System.Drawing.Point(12, 12);
             this.listboxPlugins.Name = "listboxPlugins";
-            this.listboxPlugins.Size = new System.Drawing.Size(367, 472);
+            this.listboxPlugins.Size = new System.Drawing.Size(180, 472);
             this.listboxPlugins.TabIndex = 1;
             this.listboxPlugins.SelectedIndexChanged += new System.EventHandler(this.listboxPlugins_SelectedIndexChanged);
             // 
@@ -51,14 +51,14 @@
             this.datagridClients.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.datagridClients.Location = new System.Drawing.Point(697, 12);
             this.datagridClients.Name = "datagridClients";
-            this.datagridClients.Size = new System.Drawing.Size(348, 355);
+            this.datagridClients.Size = new System.Drawing.Size(348, 441);
             this.datagridClients.TabIndex = 2;
             // 
             // buttonGetClients
             // 
-            this.buttonGetClients.Location = new System.Drawing.Point(541, 12);
+            this.buttonGetClients.Location = new System.Drawing.Point(869, 459);
             this.buttonGetClients.Name = "buttonGetClients";
-            this.buttonGetClients.Size = new System.Drawing.Size(150, 25);
+            this.buttonGetClients.Size = new System.Drawing.Size(176, 25);
             this.buttonGetClients.TabIndex = 3;
             this.buttonGetClients.Text = "Update Client List";
             this.buttonGetClients.UseVisualStyleBackColor = true;
@@ -66,9 +66,9 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(385, 12);
+            this.button1.Location = new System.Drawing.Point(697, 459);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(150, 25);
+            this.button1.Size = new System.Drawing.Size(166, 25);
             this.button1.TabIndex = 4;
             this.button1.Text = "Update Plugin List";
             this.button1.UseVisualStyleBackColor = true;
@@ -85,9 +85,9 @@
             // 
             // panel1
             // 
-            this.panel1.Location = new System.Drawing.Point(385, 43);
+            this.panel1.Location = new System.Drawing.Point(198, 12);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(306, 196);
+            this.panel1.Size = new System.Drawing.Size(493, 472);
             this.panel1.TabIndex = 6;
             // 
             // Main
@@ -102,7 +102,7 @@
             this.Controls.Add(this.datagridClients);
             this.Controls.Add(this.listboxPlugins);
             this.Name = "Main";
-            this.Text = "Form1";
+            this.Text = "Platinium Beta Master";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.datagridClients)).EndInit();
             this.ResumeLayout(false);

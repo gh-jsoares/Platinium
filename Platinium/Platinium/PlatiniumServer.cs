@@ -26,15 +26,13 @@ namespace Platinium
         public class Connector
         {
             private static  Logger _logger = new Logger();
-            public TcpClient ClientSocket { get; private set; }
-            private static NetworkStream networkStream = default(NetworkStream);
-            public void StartConnection(TcpClient inClientSocket, Logger logger)
+            public NetworkStream ClientStream { get; private set; }
+            public void StartConnection(NetworkStream inNetworkStream, Logger logger)
             {
-                ClientSocket = inClientSocket;
+                ClientStream = inNetworkStream;
                 
                 _logger = logger;
                 Thread handleThread = new Thread(handleConnection);
-                handleThread.Name = "HANDLETHREAD";
                 handleThread.Start();
             }
             private void handleConnection()
@@ -43,7 +41,7 @@ namespace Platinium
                 {
                     try
                     {
-                        Package package = NetworkManagement.ReadData(ClientSocket);
+                        Package package = NetworkManagement.ReadData(ClientStream, _logger);
                         if (package.From != null)
                         {
                             Console.WriteLine(_logger.LogMessageToFile($"*************** GET PACKAGE ***************\n* Type - {package.PackageType.ToString().NULLIfNull()}\n* Value - {package.Content.NULLIfNull()}\n* From Type - {package.From.Type.NULLIfNull()}\n* From - {package.From.UID.NULLIfNull()}\n* To Type - {package.To.Type.NULLIfNull()}\n* To - {package.To.UID.NULLIfNull()}\n*************** END GET ***************"));
@@ -68,7 +66,7 @@ namespace Platinium
                             {
                                 if (package.PackageType != PackageType.Response)
                                 {
-                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
+                                    NetworkManagement.WriteData(item.Connector.ClientStream, PackageFactory.HandleServerPackages(package), _logger);
                                 }
                             }
                         }
@@ -80,7 +78,7 @@ namespace Platinium
                             {
                                 if (package.PackageType != PackageType.Response)
                                 {
-                                    NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
+                                    NetworkManagement.WriteData(item.Connector.ClientStream, PackageFactory.HandleServerPackages(package), _logger);
                                 }
                             }
                         }
@@ -96,7 +94,7 @@ namespace Platinium
                                     {
                                         if (package.PackageType != PackageType.Response)
                                         {
-                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
+                                            NetworkManagement.WriteData(item.Connector.ClientStream, PackageFactory.HandleServerPackages(package), _logger);
                                         }
                                     }
                                 }
@@ -109,7 +107,7 @@ namespace Platinium
                                     {
                                         if (package.PackageType != PackageType.Response)
                                         {
-                                            NetworkManagement.WriteData(item.Connector.ClientSocket, PackageFactory.HandleServerPackages(package), _logger);
+                                            NetworkManagement.WriteData(item.Connector.ClientStream, PackageFactory.HandleServerPackages(package), _logger);
                                         }
                                     }
                                 }
@@ -160,7 +158,7 @@ namespace Platinium
                 while (true)
                 {
                     TcpClient Socket = ServerSocket.AcceptTcpClient();
-                    Package package = NetworkManagement.ReadData(Socket);
+                    Package package = NetworkManagement.ReadData(Socket.GetStream());
                     ClientInfo Info = (ClientInfo)package.Content;
                     Info.Connector = new Connector();
                     if (Info.Type == BaseInfoType.Client)
@@ -196,7 +194,7 @@ namespace Platinium
                         {
                             Console.WriteLine(logger.LogMessageToFile($"* {item.Key} - {item.Value}"));
                         }
-                        Info.Connector.StartConnection(Socket, logger);
+                        Info.Connector.StartConnection(Socket.GetStream(), logger);
                     }
                     Console.WriteLine(logger.LogMessageToFile($"*******************************************"));
                 }
@@ -267,8 +265,8 @@ namespace Platinium
                     {
                         foreach (var client in DataStructure.ClientList)
                         {
-                            TcpClient testTcp = client.Connector.ClientSocket;
-                            if (!testTcp.Connected)
+                            NetworkStream testTcp = client.Connector.ClientStream;
+                            if (!testTcp.CanWrite)
                             {
                                 if (client.IsConnected)
                                 {
@@ -298,8 +296,8 @@ namespace Platinium
                     {
                         foreach (var master in DataStructure.MasterList)
                         {
-                            TcpClient testTcp = master.Connector.ClientSocket;
-                            if (!testTcp.Connected)
+                            NetworkStream testTcp = master.Connector.ClientStream;
+                            if (!testTcp.CanWrite)
                             {
                                 if (master.IsConnected)
                                 {

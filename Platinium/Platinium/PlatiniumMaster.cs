@@ -24,6 +24,7 @@ namespace Platinium
         public class PlatiniumMaster
         {
             private ClientInfo MasterInfo = BuildMasterInfo();
+            public NetworkStream networkStream;
             public TcpClient masterSocket = new TcpClient();
             private static PackageFactory PFactory;
             public string FILE_LOG_PATH;
@@ -40,6 +41,7 @@ namespace Platinium
                 {
                     logger.Path = FILE_LOG_PATH;
                     masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
+                    networkStream = masterSocket.GetStream();
                     PFactory = new PackageFactory(this);
                     DataStructure.Info = MasterInfo;
                     Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
@@ -61,10 +63,10 @@ namespace Platinium
             {
                 try
                 {
-                    NetworkManagement.WriteData(masterSocket, package, logger);
+                    NetworkManagement.WriteData(networkStream, package, logger);
                     if (!DataStructure.PackageStatus.ContainsKey(package.ID))
                     {
-                        DataStructure.PackageStatus.Add(package.ID, false);
+                        DataStructure.PackageStatus.Add(package.ID, PackageStatus.NotProcessed);
                     }
                     return package.ID;
                 }
@@ -78,7 +80,7 @@ namespace Platinium
                     Package package;
                     try
                     {
-                        package = NetworkManagement.ReadData(masterSocket, logger);
+                        package = NetworkManagement.ReadData(networkStream, logger);
                     }
                     catch (Exception ex) { isConnected = false; logger.LogMessageToFile($"FATAL EXCEPTION: {ex.Message}"); break; }
                     package = PFactory.HandleMasterPackages(package);

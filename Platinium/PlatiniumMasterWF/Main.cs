@@ -144,7 +144,7 @@ namespace PlatiniumMasterWF
         }
         private void checkForMessageIdStatus(string id)
         {
-            while (!DataStructure.PackageStatus[id]) { }
+            while (DataStructure.PackageStatus[id] != Platinium.Shared.Data.Packages.PackageStatus.Processed) { }
         }
     }
     //public static class RichTextBoxExtensions

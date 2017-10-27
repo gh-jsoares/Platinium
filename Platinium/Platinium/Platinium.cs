@@ -627,55 +627,55 @@ namespace Platinium
             {
                 public class NetworkManagement
                 {
-                    public static Package ReadData(TcpClient Socket)
+                    public static Package ReadData(NetworkStream NetworkStream)
                     {
-                        NetworkStream networkStream = Socket.GetStream();
                         List<byte> data = new List<byte>();
-                        if (networkStream.CanRead)
+                        if (NetworkStream.CanRead)
                         {
                             byte[] buffer = new byte[1024];
                             int totalBytesRead = 0;
                             do
                             {
-                                totalBytesRead = networkStream.Read(buffer, 0, buffer.Length);
+                                totalBytesRead = NetworkStream.Read(buffer, 0, buffer.Length);
                                 data.AddRange(buffer);
-                            } while (networkStream.DataAvailable);
+                            } while (NetworkStream.DataAvailable);
                         }
-                        return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
+                        //return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
+                        return (Package)Serializer.Deserialize(data.ToArray());
                     }
-                    public static Package ReadData(TcpClient Socket, Logger logger)
+                    public static Package ReadData(NetworkStream NetworkStream, Logger logger)
                     {
-                        NetworkStream networkStream = Socket.GetStream();
                         List<byte> data = new List<byte>();
-                        if (networkStream.CanRead)
+                        if (NetworkStream.CanRead)
                         {
                             byte[] buffer = new byte[1024];
                             int totalBytesRead = 0;
                             do
                             {
-                                totalBytesRead = networkStream.Read(buffer, 0, buffer.Length);
+                                totalBytesRead = NetworkStream.Read(buffer, 0, buffer.Length);
                                 data.AddRange(buffer);
-                            } while (networkStream.DataAvailable);
+                            } while (NetworkStream.DataAvailable);
                             logger.LogMessageToFile($"Data received. Size {totalBytesRead} bytes.");
                         }
-                        return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
+                        //return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
+                        return (Package)Serializer.Deserialize(data.ToArray());
                     }
-                    public static void WriteData(TcpClient Socket, Package Package)
+                    public static void WriteData(NetworkStream NetworkStream, Package Package)
                     {
-                        byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
-                        NetworkStream networkStream = Socket.GetStream();
-                        if (networkStream.CanWrite)
+                        //byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
+                        byte[] data = Serializer.Serialize(Package);
+                        if (NetworkStream.CanWrite)
                         {
-                            networkStream.Write(data, 0, data.Length);
+                            NetworkStream.Write(data, 0, data.Length);
                         }
                     }
-                    public static void WriteData(TcpClient Socket, Package Package, Logger logger)
+                    public static void WriteData(NetworkStream NetworkStream, Package Package, Logger logger)
                     {
-                        byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
-                        NetworkStream networkStream = Socket.GetStream();
-                        if (networkStream.CanWrite)
+                        ///byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
+                        byte[] data = Serializer.Serialize(Package);
+                        if (NetworkStream.CanWrite)
                         {
-                            networkStream.Write(data, 0, data.Length);
+                            NetworkStream.Write(data, 0, data.Length);
                         }
                         logger.LogMessageToFile($"Data sent. Size {data.Length} bytes.");
                     }
@@ -683,6 +683,13 @@ namespace Platinium
             }
             namespace Packages
             {
+                public enum PackageStatus
+                {
+                    NotProcessed,
+                    Processed,
+                    TimedOut,
+                    Error
+                }
                 /// <summary>
                 /// Creates the Packages for the Client, Master and Server.
                 /// </summary>
@@ -793,7 +800,7 @@ namespace Platinium
                         }
                         if (DataStructure.PackageStatus.ContainsKey(returnPackage.ID))
                         {
-                            DataStructure.PackageStatus[returnPackage.ID] = true;
+                            DataStructure.PackageStatus[returnPackage.ID] = PackageStatus.Processed;
                         }
                         return returnPackage;
                     }
@@ -864,7 +871,7 @@ namespace Platinium
                         }
                         if (DataStructure.PackageStatus.ContainsKey(returnPackage.ID))
                         {
-                            DataStructure.PackageStatus[returnPackage.ID] = true;
+                            DataStructure.PackageStatus[returnPackage.ID] = PackageStatus.Processed;
                         }
                         return returnPackage;
                     }
@@ -1042,7 +1049,7 @@ namespace Platinium
                     /// <summary>
                     /// Sets whether a package with the given ID has already been received or not.
                     /// </summary>
-                    public static Dictionary<string, bool> PackageStatus = new Dictionary<string, bool>();
+                    public static Dictionary<string, PackageStatus> PackageStatus = new Dictionary<string, PackageStatus>();
                     /// <summary>
                     /// The list of connected Masters.
                     /// </summary>
