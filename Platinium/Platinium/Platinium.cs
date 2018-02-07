@@ -418,30 +418,61 @@ namespace Platinium
             [Serializable]
             public class Command
             {
+                public string UID { get; private set; }
+                public string Type { get; private set; }
+                public string Action { get; private set; }
+                public string SubAction { get; private set; }
+                public string[] Parameters { get; private set; }
                 /// <summary>
                 /// Under construction...
                 /// </summary>
-                public string Type { get; set; }
-                /// <summary>
-                /// Under construction...
-                /// </summary>
-                public string CommandContent { get; set; }
-                /// <summary>
-                /// Under construction...
-                /// </summary>
-                public Command()
+                public Command(string uid, string type, string action, string subaction, string[] parameters)
                 {
-
-                }
-                /// <summary>
-                /// Under construction...
-                /// </summary>
-                /// <param name="type"></param>
-                /// <param name="command"></param>
-                public Command(string type, string command)
-                {
+                    UID = uid;
                     Type = type;
-                    CommandContent = command;
+                    Action = action;
+                    SubAction = subaction;
+                    Parameters = parameters;
+                }
+
+                public static Command ParseCommand(string command, Logger logger)
+                {
+                    try
+                    {
+                        var commandParts = command.Split(' ');
+                        var uid = commandParts[0];
+                        var commandT = commandParts[1].ToLower();
+                        var commandC = commandParts[2].ToLower();
+                        var commandA = "";
+                        var startIndex = 4;
+                        if (commandT == "plugin")
+                        {
+                            commandC = commandParts[2];
+                            commandA = commandParts[3];
+                            startIndex = 5;
+                        }
+                        else
+                        {
+                            commandA = commandC;
+                            commandC = commandT;
+                            commandT = "";
+                        }
+                        string[] parameters = new string[commandParts.Length - startIndex + 1];
+                        if(parameters.Length > 0)
+                        {
+                            for (int i = 0; i <= commandParts.Length; i++)
+                            {
+                                parameters[i] = commandParts[startIndex];
+                                startIndex++;
+                            }
+                        }
+                        return new Command(uid, commandT, commandC, commandA, parameters);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogMessageToFile(ex.Message);
+                        return null;
+                    }
                 }
             }
         }
@@ -520,27 +551,28 @@ namespace Platinium
                 public static Package HandlePluginMethods(Package inPackage, BaseInfoType baseInfoType)
                 {
                     Package returnPackage = inPackage;
-                    string[] commands = inPackage.Command.Split('|');
-                    string plugin_name = commands[0];
-                    string plugin_command = commands[1];
-                    object[] command_parameters = { inPackage };
+                    string plugin_name = inPackage.Command.Action;
+                    string plugin_command = inPackage.Command.SubAction;
+                    List<object> commandParameters = new List<object>();
+                    commandParameters.Add(inPackage);
+                    commandParameters.AddRange(inPackage.Command.Parameters);
                     Type type = null;
                     if (baseInfoType == BaseInfoType.Client)
                     {
-                        type = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault().ClientController.GetType();
+                        type = DataStructure.PluginDictionary.Where(l => l.Key.Name.ToLower().Equals(plugin_name)).Select(l => l.Value).FirstOrDefault().ClientController.GetType();
                     }
                     else if (baseInfoType == BaseInfoType.Master)
                     {
-                        type = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault().MasterController.GetType();
+                        type = DataStructure.PluginDictionary.Where(l => l.Key.Name.ToLower().Equals(plugin_name)).Select(l => l.Value).FirstOrDefault().MasterController.GetType();
                     }
 
                     if (type != null)
                     {
-                        MethodInfo methodInfo = type.GetMethod(plugin_command);
+                        MethodInfo methodInfo = type.GetMethod(plugin_command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
                         if (methodInfo != null)
                         {
                             ParameterInfo[] parameters = methodInfo.GetParameters();
-                            IPluginImplementation pluginInstance = DataStructure.PluginDictionary.Where(l => l.Key.Name.Equals(plugin_name)).Select(l => l.Value).FirstOrDefault();
+                            IPluginImplementation pluginInstance = DataStructure.PluginDictionary.Where(l => l.Key.Name.ToLower().Equals(plugin_name)).Select(l => l.Value).FirstOrDefault();
 
                             if (parameters.Length == 0)
                             {
@@ -557,11 +589,11 @@ namespace Platinium
                             {
                                 if (baseInfoType == BaseInfoType.Client)
                                 {
-                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, command_parameters.ToArray());
+                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, commandParameters.ToArray());
                                 }
                                 else if (baseInfoType == BaseInfoType.Master)
                                 {
-                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, command_parameters.ToArray());
+                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, commandParameters.ToArray());
                                 }
                             }
                         }
@@ -717,13 +749,13 @@ namespace Platinium
                                 returnPackage = inPackage;
                                 break;
                             case PackageType.Data:
-                                switch (inPackage.Command)
+                                switch (inPackage.Command.Action)
                                 {
-                                    case "LOAD_PLUGINS":
-                                        returnPackage = new Package("LOAD_PLUGINS", DataStructure.AssemblyRaw, PackageType.Data, inPackage.To, inPackage.From, inPackage.ID);
+                                    case "load_plugins":
+                                        returnPackage = new Package(inPackage.Command, DataStructure.AssemblyRaw, PackageType.Data, inPackage.To, inPackage.From, inPackage.ID);
                                         break;
-                                    case "CLIENT_LIST":
-                                        returnPackage = new Package("CLIENT_LIST", DataStructure.ClientList, PackageType.Data, inPackage.To, inPackage.From, inPackage.ID);
+                                    case "client_list":
+                                        returnPackage = new Package(inPackage.Command, DataStructure.ClientList, PackageType.Data, inPackage.To, inPackage.From, inPackage.ID);
                                         break;
                                     default:
                                         break;
@@ -755,9 +787,9 @@ namespace Platinium
                                 returnPackage = inPackage;
                                 break;
                             case PackageType.Data:
-                                switch (inPackage.Command)
+                                switch (inPackage.Command.Action)
                                 {
-                                    case "LOAD_PLUGINS":
+                                    case "load_plugins":
                                         DataStructure.PluginDictionary.Clear();
                                         DataStructure.AssemblyRaw = (List<byte[]>)inPackage.Content;
                                         Console.WriteLine("LOADED ASSEMBLIES");
@@ -798,10 +830,6 @@ namespace Platinium
                             case PackageType.Response:
                                 break;
                         }
-                        if (DataStructure.PackageStatus.ContainsKey(returnPackage.ID))
-                        {
-                            DataStructure.PackageStatus[returnPackage.ID] = PackageStatus.Processed;
-                        }
                         return returnPackage;
                     }
                     /// <summary>
@@ -818,9 +846,9 @@ namespace Platinium
                                 returnPackage = inPackage;
                                 break;
                             case PackageType.Data:
-                                switch (inPackage.Command)
+                                switch (inPackage.Command.Action)
                                 {
-                                    case "LOAD_PLUGINS":
+                                    case "load_plugins":
                                         DataStructure.LoadedAssemblyList.Clear();
                                         DataStructure.PluginDictionary.Clear();
                                         DataStructure.PluginMethodDictionary.Clear();
@@ -852,7 +880,7 @@ namespace Platinium
                                             plugin.InstantiateMaster();
                                         }
                                         break;
-                                    case "CLIENT_LIST":
+                                    case "client_list":
                                         DataStructure.ClientList = (List<ClientInfo>)inPackage.Content;
                                         break;
                                     default:
@@ -868,10 +896,6 @@ namespace Platinium
                                 break;
                             case PackageType.Response:
                                 break;
-                        }
-                        if (DataStructure.PackageStatus.ContainsKey(returnPackage.ID))
-                        {
-                            DataStructure.PackageStatus[returnPackage.ID] = PackageStatus.Processed;
                         }
                         return returnPackage;
                     }
@@ -897,7 +921,7 @@ namespace Platinium
                     /// <summary>
                     /// The command.
                     /// </summary>
-                    public string Command { get; private set; }
+                    public Command Command { get; private set; }
                     /// <summary>
                     /// The content of the package.
                     /// </summary>
@@ -920,7 +944,7 @@ namespace Platinium
                     /// <param name="from">From whom the Package is sent.</param>
                     /// <param name="to">To whom the Package is sent.</param>
                     /// <param name="Id">The Package ID. If null, it's generated a new one.</param>
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to, string Id = null)
+                    public Package(Command command, object obj, PackageType packagetype, ClientInfo from, ClientInfo to, string Id = null)
                     {
                         if (Id == null)
                         {
@@ -945,7 +969,7 @@ namespace Platinium
                     /// <param name="obj">The content of the package.</param>
                     /// <param name="packagetype">The type of package.</param>
                     /// <param name="Id">The Package ID. If null, it's generated a new one.</param>
-                    public Package(string command, object obj, PackageType packagetype, string Id = null)
+                    public Package(Command command, object obj, PackageType packagetype, string Id = null)
                     {
                         if (Id == null)
                         {
@@ -970,7 +994,7 @@ namespace Platinium
                     /// <param name="packagetype">The type of package.</param>
                     /// <param name="to">To whom the Package is sent.</param>
                     /// <param name="Id">The Package ID. If null, it's generated a new one.</param>
-                    public Package(string command, object obj, PackageType packagetype, ClientInfo to, string Id = null)
+                    public Package(Command command, object obj, PackageType packagetype, ClientInfo to, string Id = null)
                     {
                         if (Id == null)
                         {

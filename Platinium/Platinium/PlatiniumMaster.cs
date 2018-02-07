@@ -53,11 +53,25 @@ namespace Platinium
             }
             public string GetPlugins()
             {
-                return Write(new Package("LOAD_PLUGINS", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
+                return Write(new Package(new Command(null, null, "load_plugins", null, null), null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
             }
             public string GetClients()
             {
-                return Write(new Package("CLIENT_LIST", null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
+                return Write(new Package(new Command(null, null, "client_list", null, null), null, PackageType.Data, MasterInfo, new ClientInfo(BaseInfoType.Server), null));
+            }
+            public string SendCommand(string command)
+            {
+                Command parsedCommand = Command.ParseCommand(command, logger);
+                PackageType type;
+                if (parsedCommand.Type == "plugin")
+                {
+                    type = PackageType.PluginCommand;
+                }
+                else
+                {
+                    type = PackageType.Base;
+                }
+                return Write(new Package(parsedCommand, null, type, MasterInfo, new ClientInfo(parsedCommand.UID)));
             }
             private string Write(Package package)
             {
