@@ -53,14 +53,14 @@ namespace PlatiniumMaster
         }
         public string ExecuteMethod(string method)
         {
-            MethodInfo methodInfo = type.GetMethod(method);
+            MethodInfo methodInfo = type.GetMethod(method, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
             return (string)methodInfo.Invoke(instance, null);
         }
         public string SendCommand(string command)
         {
             List<object> commandList = new List<object>();
             commandList.Add(command);
-            MethodInfo methodInfo = type.GetMethod("SendCommand");
+            MethodInfo methodInfo = type.GetMethod("SendCommand", BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
             return (string)methodInfo.Invoke(instance, commandList.ToArray());
         }
     }

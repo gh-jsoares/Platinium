@@ -87,10 +87,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Platinium.Contracts\Platinium.Contracts.csproj">
-      <Project>{0CBB00DC-5C65-4FE1-A974-95F4E517B737}</Project>
-      <Name>Platinium.Contracts</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Platinium\Platinium.csproj">
       <Project>{9AC9C29D-E25F-4004-AE8B-5759FC6D869E}</Project>
       <Name>Platinium</Name>

@@ -50,6 +50,7 @@ namespace Platinium
                         {
                             Console.WriteLine(_logger.LogMessageToFile($"*************** GET PACKAGE ***************\n* Type - {package.PackageType}"));
                         }
+
                         Communicate(package);
                     }
                     catch (Exception) { break; }

@@ -47,6 +47,7 @@ namespace Platinium
                             clientSocket = new TcpClient();
                             clientSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                             networkStream = clientSocket.GetStream();
+                            NetworkManagement.SetNetworkStream(networkStream);
                             PFactory = new PackageFactory(this);
                             DataStructure.Info = ClientInfo;
                             Write(new Package(null, ClientInfo, PackageType.Base, ClientInfo, new ClientInfo(BaseInfoType.Server), null));

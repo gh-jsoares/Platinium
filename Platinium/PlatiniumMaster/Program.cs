@@ -23,7 +23,8 @@ namespace PlatiniumMaster
             {
                 string command = Console.ReadLine();
                 //var id = master.ExecuteMethod(command);
-                master.SendCommand("7AAA-7FEC-C5F6-D623-462C-DCD6-DA5A-070A plugin screenshot action");
+                //master.SendCommand("7AAA-7FEC-C5F6-D623-462C-DCD6-DA5A-070A plugin screenshot action");
+                master.SendCommand("7AAA-7FEC-C5F6-D623-462C-DCD6-DA5A-070A plugin video action");
                 foreach (var item in DataStructure.PluginDictionary.ToList())
                 {
                     Console.WriteLine($"{item.Key} - {item.Value}");
@@ -36,8 +37,10 @@ namespace PlatiniumMaster
         }
         public static void InitializeMaster()
         {
+            Thread.Sleep(5000);
             master = new MasterController();
             Connect();
+            GetPlugins();
         }
         private static void Connect()
         {
@@ -48,8 +51,7 @@ namespace PlatiniumMaster
             while (true)
             {
                 GetClients();
-                GetPlugins();
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
             }
         }
         private static void GetPlugins()

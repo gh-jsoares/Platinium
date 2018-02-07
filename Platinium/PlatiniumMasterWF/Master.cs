@@ -54,7 +54,7 @@ namespace PlatiniumMasterWF
         }
         public string ExecuteMethod(string method)
         {
-            MethodInfo methodInfo = type.GetMethod(method);
+            MethodInfo methodInfo = type.GetMethod(method, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
             return (string)methodInfo.Invoke(instance, null);
         }
     }

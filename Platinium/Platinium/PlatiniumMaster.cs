@@ -42,6 +42,7 @@ namespace Platinium
                     logger.Path = FILE_LOG_PATH;
                     masterSocket.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55555));
                     networkStream = masterSocket.GetStream();
+                    NetworkManagement.SetNetworkStream(networkStream);
                     PFactory = new PackageFactory(this);
                     DataStructure.Info = MasterInfo;
                     Write(new Package(null, MasterInfo, PackageType.Base, MasterInfo, new ClientInfo(BaseInfoType.Server), null));

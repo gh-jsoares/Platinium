@@ -85,6 +85,16 @@ namespace Platinium
                     }
                     return value.ToString();
                 }
+                public static string ToLowerIfNotNull(this string value)
+                {
+                    if (value != null)
+                    {
+                        return value.ToLower();
+                    } else
+                    {
+                        return value;
+                    }
+                }
             }
             /// <summary>
             /// Generates a unique fingerprint for the device.
@@ -96,7 +106,7 @@ namespace Platinium
                 {
                     if (string.IsNullOrEmpty(fingerPrint))
                     {
-                        fingerPrint = GetHash("CPU >> " + cpuId() + "\nBIOS >> " + biosId() + "\nBASE >> " + baseId() + "\nMAC >> " + macId());
+                        fingerPrint = GetHash("CPU >> " + cpuId() + "\nBIOS >> " + biosId() + "\nBASE >> " + baseId() + "\nMAC >> " + macId()).ToLower();
                     }
                     return fingerPrint;
                 }
@@ -428,21 +438,20 @@ namespace Platinium
                 /// </summary>
                 public Command(string uid, string type, string action, string subaction, string[] parameters)
                 {
-                    UID = uid;
-                    Type = type;
-                    Action = action;
-                    SubAction = subaction;
+                    UID = uid.ToLowerIfNotNull();
+                    Type = type.ToLowerIfNotNull();
+                    Action = action.ToLowerIfNotNull();
+                    SubAction = subaction.ToLowerIfNotNull();
                     Parameters = parameters;
                 }
-
                 public static Command ParseCommand(string command, Logger logger)
                 {
                     try
                     {
                         var commandParts = command.Split(' ');
-                        var uid = commandParts[0];
-                        var commandT = commandParts[1].ToLower();
-                        var commandC = commandParts[2].ToLower();
+                        var uid = commandParts[0].ToLowerIfNotNull();
+                        var commandT = commandParts[1].ToLowerIfNotNull();
+                        var commandC = commandParts[2].ToLowerIfNotNull();
                         var commandA = "";
                         var startIndex = 4;
                         if (commandT == "plugin")
@@ -506,6 +515,7 @@ namespace Platinium
             }
             public class PluginClientController
             {
+                public bool IsInUse { get; set; }
                 public PluginClientController()
                 {
 
@@ -513,6 +523,7 @@ namespace Platinium
             }
             public class PluginMasterController
             {
+                public bool IsInUse { get; set; }
                 public IPluginImplementation PluginInstance { get; set; }
                 public PluginMasterController(IPluginImplementation plugin)
                 {
@@ -578,27 +589,31 @@ namespace Platinium
                             {
                                 if (baseInfoType == BaseInfoType.Client)
                                 {
-                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, null);
+                                    //returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, null);
+                                    methodInfo.Invoke(pluginInstance.ClientController, null);
                                 }
                                 else if (baseInfoType == BaseInfoType.Master)
                                 {
-                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, null);
+                                    //returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, null);
+                                    methodInfo.Invoke(pluginInstance.MasterController, null);
                                 }
                             }
                             else
                             {
                                 if (baseInfoType == BaseInfoType.Client)
                                 {
-                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, commandParameters.ToArray());
+                                    //returnPackage = (Package)methodInfo.Invoke(pluginInstance.ClientController, commandParameters.ToArray());
+                                    methodInfo.Invoke(pluginInstance.ClientController, commandParameters.ToArray());
                                 }
                                 else if (baseInfoType == BaseInfoType.Master)
                                 {
-                                    returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, commandParameters.ToArray());
+                                    //returnPackage = (Package)methodInfo.Invoke(pluginInstance.MasterController, commandParameters.ToArray());
+                                    methodInfo.Invoke(pluginInstance.MasterController, commandParameters.ToArray());
                                 }
                             }
                         }
                     }
-                    return returnPackage;
+                    return null;
                 }
             }
         }
@@ -659,6 +674,12 @@ namespace Platinium
             {
                 public class NetworkManagement
                 {
+                    public static NetworkStream NetworkStream { get; private set; }
+
+                    public static void SetNetworkStream(NetworkStream networkStream)
+                    {
+                        NetworkStream = networkStream;
+                    }
                     public static Package ReadData(NetworkStream NetworkStream)
                     {
                         List<byte> data = new List<byte>();
@@ -672,8 +693,8 @@ namespace Platinium
                                 data.AddRange(buffer);
                             } while (NetworkStream.DataAvailable);
                         }
-                        //return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
-                        return (Package)Serializer.Deserialize(data.ToArray());
+                        return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
+                        //return (Package)Serializer.Deserialize(data.ToArray());
                     }
                     public static Package ReadData(NetworkStream NetworkStream, Logger logger)
                     {
@@ -689,13 +710,17 @@ namespace Platinium
                             } while (NetworkStream.DataAvailable);
                             logger.LogMessageToFile($"Data received. Size {totalBytesRead} bytes.");
                         }
-                        //return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
-                        return (Package)Serializer.Deserialize(data.ToArray());
+                        return (Package)Serializer.Deserialize(Encryption.Decrypt(Compressor.Decompress(data.ToArray()), DataStructure.ServerKey, DataStructure.ServerIV));
+                        //return (Package)Serializer.Deserialize(data.ToArray());
                     }
                     public static void WriteData(NetworkStream NetworkStream, Package Package)
                     {
-                        //byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
-                        byte[] data = Serializer.Serialize(Package);
+                        if (Package == null)
+                        {
+                            return;
+                        }
+                        byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
+                        //byte[] data = Serializer.Serialize(Package);
                         if (NetworkStream.CanWrite)
                         {
                             NetworkStream.Write(data, 0, data.Length);
@@ -703,8 +728,12 @@ namespace Platinium
                     }
                     public static void WriteData(NetworkStream NetworkStream, Package Package, Logger logger)
                     {
-                        ///byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
-                        byte[] data = Serializer.Serialize(Package);
+                        if (Package == null)
+                        {
+                            return;
+                        }
+                        byte[] data = Compressor.Compress(Encryption.Encrypt(Serializer.Serialize(Package), DataStructure.ServerKey, DataStructure.ServerIV));
+                        //byte[] data = Serializer.Serialize(Package);
                         if (NetworkStream.CanWrite)
                         {
                             NetworkStream.Write(data, 0, data.Length);
@@ -790,18 +819,14 @@ namespace Platinium
                                 switch (inPackage.Command.Action)
                                 {
                                     case "load_plugins":
-                                        DataStructure.PluginDictionary.Clear();
+                                        DataStructure.PluginDictionary.Where(x => x.Value.ClientController.IsInUse == false).ToList().ForEach(pair => DataStructure.PluginDictionary.Remove(pair.Key));
                                         DataStructure.AssemblyRaw = (List<byte[]>)inPackage.Content;
                                         Console.WriteLine("LOADED ASSEMBLIES");
+                                        Type pluginType = typeof(IPluginImplementation);
+                                        ICollection<Type> pluginTypes = new List<Type>();
                                         foreach (var assemblyData in DataStructure.AssemblyRaw)
                                         {
                                             Assembly assembly = Assembly.Load(assemblyData);
-                                            DataStructure.LoadedAssemblyList.Add(assembly);
-                                        }
-                                        Type pluginType = typeof(IPluginImplementation);
-                                        ICollection<Type> pluginTypes = new List<Type>();
-                                        foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
-                                        {
                                             Type type = assembly.GetType("Plugin");
                                             if (!type.IsInterface || !type.IsAbstract)
                                             {
@@ -849,20 +874,14 @@ namespace Platinium
                                 switch (inPackage.Command.Action)
                                 {
                                     case "load_plugins":
-                                        DataStructure.LoadedAssemblyList.Clear();
-                                        DataStructure.PluginDictionary.Clear();
-                                        DataStructure.PluginMethodDictionary.Clear();
+                                        DataStructure.PluginDictionary.Where(x => x.Value.MasterController.IsInUse == false).ToList().ForEach(pair => DataStructure.PluginDictionary.Remove(pair.Key));
                                         DataStructure.AssemblyRaw = (List<byte[]>)inPackage.Content;
                                         Console.WriteLine("LOADED ASSEMBLIES");
+                                        Type pluginType = typeof(IPluginImplementation);
+                                        ICollection<Type> pluginTypes = new List<Type>();
                                         foreach (var assemblyData in DataStructure.AssemblyRaw)
                                         {
                                             Assembly assembly = Assembly.Load(assemblyData);
-                                            DataStructure.LoadedAssemblyList.Add(assembly);
-                                        }
-                                        Type pluginType = typeof(IPluginImplementation);
-                                        ICollection<Type> pluginTypes = new List<Type>();
-                                        foreach (Assembly assembly in DataStructure.LoadedAssemblyList)
-                                        {
                                             Type type = assembly.GetType("Plugin");
                                             if (!type.IsInterface || !type.IsAbstract)
                                             {
@@ -873,10 +892,7 @@ namespace Platinium
                                         {
                                             IPluginImplementation plugin = (IPluginImplementation)Activator.CreateInstance(type, Instance);
                                             var pluginMetadata = (Metadata[])type.GetCustomAttributes(typeof(Metadata), true);
-                                            MethodInfo[] methodInfo = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
                                             DataStructure.PluginDictionary.Add(pluginMetadata[0], plugin);
-                                            DataStructure.PluginMethodDictionary.Add(pluginMetadata[0], methodInfo);
-
                                             plugin.InstantiateMaster();
                                         }
                                         break;

